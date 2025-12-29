@@ -76,7 +76,13 @@ jobs:
         if: steps.build_apk.outcome != 'success'
         run: |
           echo "::error::Gradle assembleRelease failed (exit_code=${{ steps.build_apk.outputs.exit_code }})"
+          echo "---- gradle-build.log (tail) ----"
           tail -n 200 gradle-build.log || true
+          echo "---------------------------------"
+
+          # 同步把关键日志作为 annotation，便于通过 Checks API 读取（无需下载 logs/artifacts）
+          TAIL=$(tail -n 120 gradle-build.log 2>/dev/null | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e 's/\n/%0A/g')
+          echo "::error::Gradle log tail (last 120 lines)%0A$TAIL"
           exit 1
 
       - name: Get version
