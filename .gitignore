@@ -1,0 +1,13 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+app/build/
+app/release.keystore.b64
+# app/release.keystore is usually ignored but we committed it. Keeping it visible for now or ignoring for future.
