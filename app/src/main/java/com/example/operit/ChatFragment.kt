@@ -10,21 +10,29 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.ai.AiPreferences
+import com.example.operit.ai.AiSettings
 import com.example.operit.ai.OpenAiChatClient
-import com.google.android.material.button.MaterialButton
 import com.example.operit.logging.AppLog
 import com.example.operit.prompts.PromptPreferences
+import com.example.operit.toolsystem.ChatToolRegistry
+import com.google.android.material.button.MaterialButton
 import okhttp3.Call
+import org.json.JSONObject
 
 class ChatFragment : Fragment() {
 
     private lateinit var adapter: ChatAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyState: View
+
     private var inFlightCall: Call? = null
     private var isSending = false
+
     private val chatClient = OpenAiChatClient()
     private val conversation = mutableListOf<OpenAiChatClient.Message>()
+    private val tools by lazy { ChatToolRegistry.defaultTools() }
+
+    private val maxToolRounds = 4
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_chat, container, false)
@@ -85,43 +93,117 @@ class ChatFragment : Fragment() {
         }
 
         if (conversation.isEmpty()) {
-            val systemPrompt = PromptPreferences.get(requireContext()).getChatSystemPrompt()
-            conversation.add(
-                OpenAiChatClient.Message(
-                    role = "system",
-                    content = systemPrompt,
-                ),
-            )
+            val systemPromptBase = PromptPreferences.get(requireContext()).getChatSystemPrompt()
+            val systemPrompt =
+                systemPromptBase +
+                    "\n\n你可以在需要时调用工具函数来操作应用内模块（脚本/日志/虚拟屏幕）。" +
+                    "对可能破坏性操作（如清空日志、覆盖脚本）应先向用户确认。"
+            conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
         conversation.add(OpenAiChatClient.Message(role = "user", content = text))
 
         isSending = true
-        adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+        val placeholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+
+        runToolLoop(settings = settings, placeholderPos = placeholderPos, round = 0)
+    }
+
+    private fun runToolLoop(
+        settings: AiSettings,
+        placeholderPos: Int,
+        round: Int,
+    ) {
+        val ctx = context ?: return
+
+        if (round >= maxToolRounds) {
+            isSending = false
+            adapter.updateMessage(placeholderPos, "已达到工具调用轮次上限，请把下一步需求说得更具体一些。")
+            recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+            return
+        }
 
         inFlightCall?.cancel()
         inFlightCall =
-            chatClient.chat(
+            chatClient.chatWithTools(
                 settings = settings,
                 messages = conversation.toList(),
+                tools = tools,
                 onResult = { result ->
                     activity?.runOnUiThread {
-                        isSending = false
-                        val reply = result.getOrElse { e ->
-                            val msg = e.message?.takeIf { it.isNotBlank() } ?: e.javaClass.simpleName
-                            "请求失败：$msg"
-                        }
-                        if (result.isFailure) {
-                            AppLog.e("Chat", "request failed: $reply")
-                        } else {
-                            AppLog.i("Chat", "request ok")
-                        }
-                        conversation.add(OpenAiChatClient.Message(role = "assistant", content = reply))
-                        adapter.addMessage(ChatAdapter.Message(reply, false))
-                        recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
-                        if (result.isFailure) {
-                            Toast.makeText(ctx, "AI 调用失败（可检查 API Key/Endpoint）", Toast.LENGTH_SHORT).show()
-                        }
+                        if (!isAdded) return@runOnUiThread
+
+                        result.fold(
+                            onSuccess = { r ->
+                                // 必须把 assistant 消息（含 tool_calls）加入对话，才能继续发送 tool 消息
+                                conversation.add(r.assistantMessage)
+
+                                val hasToolCalls = r.toolCalls.isNotEmpty()
+                                val contentToShow =
+                                    when {
+                                        r.content.isNotBlank() -> r.content
+                                        hasToolCalls -> "正在调用工具..."
+                                        else -> "（无内容）"
+                                    }
+                                adapter.updateMessage(placeholderPos, contentToShow)
+                                recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+
+                                if (!hasToolCalls) {
+                                    isSending = false
+                                    AppLog.i("Chat", "request ok (no tools)")
+                                    return@fold
+                                }
+
+                                AppLog.i("Chat", "tool_calls=${r.toolCalls.size}")
+
+                                Thread {
+                                    val toolMessages = ArrayList<OpenAiChatClient.Message>(r.toolCalls.size)
+                                    val summary = StringBuilder()
+
+                                    r.toolCalls.forEach { tc ->
+                                        val toolResult =
+                                            ChatToolRegistry.execute(ctx, tc.name, tc.argumentsJson)
+                                                .getOrElse { e ->
+                                                    JSONObject()
+                                                        .put("ok", false)
+                                                        .put("error", e.message ?: e.javaClass.simpleName)
+                                                        .toString()
+                                                }
+                                        toolMessages.add(
+                                            OpenAiChatClient.Message(
+                                                role = "tool",
+                                                content = toolResult,
+                                                toolCallId = tc.id,
+                                            ),
+                                        )
+                                        summary.append("【工具】").append(tc.name).append(" 已执行").append('\n')
+                                    }
+
+                                    activity?.runOnUiThread {
+                                        if (!isAdded) return@runOnUiThread
+
+                                        toolMessages.forEach { conversation.add(it) }
+                                        if (summary.isNotBlank()) {
+                                            adapter.addMessage(ChatAdapter.Message(summary.toString().trimEnd(), false))
+                                        }
+                                        recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+
+                                        val nextPlaceholder = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+                                        recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+                                        runToolLoop(settings, nextPlaceholder, round + 1)
+                                    }
+                                }.start()
+                            },
+                            onFailure = { e ->
+                                isSending = false
+                                val msg = e.message?.takeIf { it.isNotBlank() } ?: e.javaClass.simpleName
+                                val reply = "请求失败：$msg"
+                                AppLog.e("Chat", "request failed: $reply", e)
+                                adapter.updateMessage(placeholderPos, reply)
+                                recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+                                Toast.makeText(ctx, "AI 调用失败（可检查 API Key/Endpoint）", Toast.LENGTH_SHORT).show()
+                            },
+                        )
                     }
                 },
             )
@@ -132,3 +214,4 @@ class ChatFragment : Fragment() {
         super.onDestroyView()
     }
 }
+

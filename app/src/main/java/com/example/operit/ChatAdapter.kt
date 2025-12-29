@@ -12,9 +12,16 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     data class Message(val text: String, val isUser: Boolean)
 
-    fun addMessage(message: Message) {
+    fun addMessage(message: Message): Int {
         messages.add(message)
         notifyItemInserted(messages.size - 1)
+        return messages.size - 1
+    }
+
+    fun updateMessage(position: Int, newText: String) {
+        if (position < 0 || position >= messages.size) return
+        messages[position] = messages[position].copy(text = newText)
+        notifyItemChanged(position)
     }
 
     override fun getItemViewType(position: Int): Int {
