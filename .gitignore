@@ -15,3 +15,4 @@ app/release.keystore.b64
 # CI debug artifacts (local downloads)
 run_*_logs.zip
 artifact_*.zip
+.ci_artifacts/

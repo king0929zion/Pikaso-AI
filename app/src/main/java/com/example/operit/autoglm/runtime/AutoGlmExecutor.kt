@@ -33,7 +33,7 @@ class AutoGlmExecutor(
 
                 val type = step.type
                 val args = step.args
-                onLog("Step ${index + 1}/${plan.steps.size}: $type ${args.optString(\"note\", \"\").trim()}")
+                onLog("Step ${index + 1}/${plan.steps.size}: $type ${args.optString("note", "").trim()}")
 
                 val service = serviceProvider() ?: throw IllegalStateException("无障碍服务未连接（请先在系统设置中开启）")
 
@@ -197,4 +197,3 @@ class AutoGlmExecutor(
         return latch.await(5, TimeUnit.SECONDS) && ok
     }
 }
-
