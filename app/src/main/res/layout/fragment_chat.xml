@@ -83,13 +83,15 @@
             android:layout_height="wrap_content"
             android:hint="Ask Pikaso..."
             android:background="@null"
-            android:minHeight="24dp"
+            android:minHeight="48dp"
             android:maxHeight="160dp"
             android:textSize="16sp"
             android:textColor="@color/md_theme_light_onBackground"
             android:textColorHint="@color/md_theme_light_onSurfaceVariant"
             android:inputType="textMultiLine"
-            android:paddingBottom="8dp"/>
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center_vertical"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,38 +99,41 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <com.google.android.material.button.MaterialButton
+            <!-- Attach button - no background -->
+            <ImageButton
                 android:id="@+id/btnAttach"
-                style="@style/Widget.Pikaso.Button.Icon"
-                android:layout_width="@dimen/btn_send_size"
-                android:layout_height="@dimen/btn_send_size"
-                app:icon="@drawable/ic_add"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"/>
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_add"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/md_theme_light_onSurfaceVariant"/>
 
-            <com.google.android.material.button.MaterialButton
+            <!-- Tools button - no background, better icon -->
+            <ImageButton
                 android:id="@+id/btnTools"
-                style="@style/Widget.Pikaso.Button.Icon"
-                android:layout_width="@dimen/btn_send_size"
-                android:layout_height="@dimen/btn_send_size"
-                android:layout_marginStart="@dimen/spacing_small"
-                app:icon="@drawable/ic_build"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"/>
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_extension"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/md_theme_light_onSurfaceVariant"/>
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"/>
 
+            <!-- Send button - circular with icon -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSend"
                 style="@style/Widget.Pikaso.Button.Icon.Circle"
-                android:layout_width="@dimen/btn_send_size"
-                android:layout_height="@dimen/btn_send_size"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 app:icon="@drawable/ic_arrow_upward"
                 app:iconGravity="textStart"
-                app:iconPadding="0dp"/>
+                app:iconPadding="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"/>
 
         </LinearLayout>
     </LinearLayout>
