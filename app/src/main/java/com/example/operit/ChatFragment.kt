@@ -31,7 +31,7 @@ class ChatFragment : Fragment() {
 
     private var inFlightCall: Call? = null
     private var isSending = false
-    private var placeholderPos: Int? = null
+    private var currentPlaceholderPos: Int? = null
 
     private val chatClient = OpenAiChatClient()
     private val conversation = mutableListOf<OpenAiChatClient.Message>()
@@ -95,7 +95,7 @@ class ChatFragment : Fragment() {
         if (isSending) {
             inFlightCall?.cancel()
             isSending = false
-            placeholderPos?.let { adapter.updateMessage(it, "已取消") }
+            currentPlaceholderPos?.let { adapter.updateMessage(it, "已取消") }
             Toast.makeText(ctx, "已取消", Toast.LENGTH_SHORT).show()
             updateSendingUi()
             return
@@ -211,10 +211,10 @@ class ChatFragment : Fragment() {
 
         isSending = true
         updateSendingUi()
-        placeholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+        currentPlaceholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
-        runToolLoop(settings = settings, placeholderPos = placeholderPos ?: -1, round = 0)
+        runToolLoop(settings = settings, placeholderPos = currentPlaceholderPos ?: -1, round = 0)
     }
 
     private fun runToolLoop(
@@ -303,7 +303,7 @@ class ChatFragment : Fragment() {
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
                                         val nextPlaceholder = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
-                                        placeholderPos = nextPlaceholder
+                                        currentPlaceholderPos = nextPlaceholder
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                                         runToolLoop(settings, nextPlaceholder, round + 1)
                                     }
