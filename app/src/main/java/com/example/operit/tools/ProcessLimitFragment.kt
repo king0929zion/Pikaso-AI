@@ -64,7 +64,7 @@ class ProcessLimitFragment : Fragment() {
     private fun openDeveloperOptions() {
         val ctx = context ?: return
         try {
-            startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+            startActivity(Intent(ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
         } catch (_: Exception) {
             try {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
@@ -82,5 +82,9 @@ class ProcessLimitFragment : Fragment() {
             Toast.makeText(ctx, "无法打开链接：$url", Toast.LENGTH_SHORT).show()
         }
     }
-}
 
+    private companion object {
+        private const val ACTION_APPLICATION_DEVELOPMENT_SETTINGS =
+            "android.settings.APPLICATION_DEVELOPMENT_SETTINGS"
+    }
+}
