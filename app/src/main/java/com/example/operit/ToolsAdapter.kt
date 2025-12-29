@@ -33,7 +33,7 @@ class ToolsAdapter(private val onItemClick: (String) -> Unit) : RecyclerView.Ada
         private val ivIcon: ImageView = itemView.findViewById(R.id.ivIcon)
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvDesc: TextView = itemView.findViewById(R.id.tvDesc)
-        private val container: View = itemView.findViewById(R.id.iconContainer).parent.parent as View // CardView
+        private val container: View = itemView.findViewById<View>(R.id.iconContainer).parent.parent as View // CardView
 
         fun bind(tool: Tool, onClick: (String) -> Unit) {
             tvTitle.text = tool.title
