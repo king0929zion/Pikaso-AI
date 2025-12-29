@@ -51,7 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#1e1e1e"
-        android:padding="16dp">
+        android:padding="16dp"
         android:fontFamily="monospace"
         android:gravity="top|start"
         android:hint="// 在这里编辑脚本内容"
