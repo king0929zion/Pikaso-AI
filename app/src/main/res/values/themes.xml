@@ -68,13 +68,15 @@
     </style>
 
     <!-- Button Icon Circle - Send button style -->
-    <style name="Widget.Pikaso.Button.Icon.Circle" parent="Widget.Pikaso.Button.Icon">
-        <item name="android:minWidth">@dimen/btn_send_size</item>
-        <item name="android:minHeight">@dimen/btn_send_size</item>
-        <item name="cornerRadius">999dp</item>
+    <style name="Widget.Pikaso.Button.Icon.Circle" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="android:minWidth">40dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="cornerRadius">20dp</item>
         <item name="backgroundTint">@color/md_theme_light_primary</item>
         <item name="tint">@color/md_theme_light_onPrimary</item>
-        <item name="elevation">0dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
     </style>
 
     <!-- Pill button style -->
