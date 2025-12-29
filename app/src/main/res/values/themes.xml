@@ -26,36 +26,109 @@
         <item name="colorOutline">@color/md_theme_light_outline</item>
         <item name="colorOutlineVariant">@color/md_theme_light_outlineVariant</item>
 
-        <!-- CardView styling - remove outline -->
-        <item name="cardElevation">0dp</item>
-        <item name="cardCornerRadius">16dp</item>
-
         <!-- Status Bar -->
         <item name="android:statusBarColor">@color/md_theme_light_background</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/md_theme_light_background</item>
 
-        <!-- Remove material component outlines -->
+        <!-- Component styles -->
         <item name="materialCardViewStyle">@style/Widget.Pikaso.CardView</item>
         <item name="materialButtonStyle">@style/Widget.Pikaso.Button</item>
+        <item name="switchStyle">@style/Widget.Pikaso.Switch</item>
+
+        <!-- Animation -->
+        <item name="android:windowAnimationStyle">@style/Animation.Pikaso.Activity</item>
     </style>
 
-    <!-- CardView without outline -->
+    <!-- CardView - Unified radius 16dp -->
     <style name="Widget.Pikaso.CardView" parent="Widget.Material3.CardView.Elevated">
         <item name="cardElevation">0dp</item>
-        <item name="cardCornerRadius">16dp</item>
+        <item name="cardCornerRadius">@dimen/radius_medium</item>
         <item name="strokeWidth">0dp</item>
         <item name="cardBackgroundColor">@color/md_theme_light_surface</item>
     </style>
 
-    <!-- Button without outline -->
+    <!-- CardView Large - 28dp for settings -->
+    <style name="Widget.Pikaso.CardView.Large" parent="Widget.Pikaso.CardView">
+        <item name="cardCornerRadius">@dimen/radius_large</item>
+    </style>
+
+    <!-- Button - Unified radius 24dp -->
     <style name="Widget.Pikaso.Button" parent="Widget.Material3.Button">
-        <item name="cornerRadius">24dp</item>
+        <item name="cornerRadius">@dimen/radius_input</item>
         <item name="strokeWidth">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Button Icon (circle) -->
+    <style name="Widget.Pikaso.Button.Icon" parent="Widget.Material3.Button.IconButton">
+        <item name="iconSize">@dimen/icon_small_size</item>
+        <item name="backgroundTint">@color/md_theme_light_surfaceVariant</item>
+        <item name="tint">@color/md_theme_light_onSurfaceVariant</item>
+    </style>
+
+    <!-- Button Icon Circle - Send button style -->
+    <style name="Widget.Pikaso.Button.Icon.Circle" parent="Widget.Pikaso.Button.Icon">
+        <item name="android:minWidth">@dimen/btn_send_size</item>
+        <item name="android:minHeight">@dimen/btn_send_size</item>
+        <item name="cornerRadius">999dp</item>
+        <item name="backgroundTint">@color/md_theme_light_primary</item>
+        <item name="tint">@color/md_theme_light_onPrimary</item>
+        <item name="elevation">0dp</item>
     </style>
 
     <!-- Pill button style -->
     <style name="Widget.Pikaso.Button.Pill" parent="Widget.Material3.Button">
-        <item name="cornerRadius">999dp</item>
+        <item name="cornerRadius">@dimen/radius_pill</item>
         <item name="strokeWidth">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- New Chat Button -->
+    <style name="Widget.Pikaso.Button.NewChat" parent="Widget.Pikaso.Button.Pill">
+        <item name="android:minHeight">@dimen/btn_new_chat_height</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Switch - Match HTML prototype -->
+    <style name="Widget.Pikaso.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="trackTint">@color/switch_track</item>
+        <item name="thumbTint">@color/switch_thumb</item>
+        <item name="android:minHeight">32dp</item>
+    </style>
+
+    <!-- Activity Animation - Smooth transitions -->
+    <style name="Animation.Pikaso.Activity" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@android:anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@android:anim/fade_out</item>
+    </style>
+
+    <!-- Nav Item -->
+    <style name="Widget.Pikaso.NavItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/md_theme_light_onSurface</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">12dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- Nav Item Active - Pill shape -->
+    <style name="Widget.Pikaso.NavItem.Active" parent="Widget.Pikaso.NavItem">
+        <item name="android:background">@drawable/bg_nav_item_active</item>
+        <item name="android:textColor">@color/md_theme_light_onSecondaryContainer</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontWeight">500</item>
     </style>
 </resources>

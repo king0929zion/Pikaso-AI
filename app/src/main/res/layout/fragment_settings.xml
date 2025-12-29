@@ -20,18 +20,18 @@
             android:textColor="@color/md_theme_light_onBackground"
             android:layout_marginBottom="16dp"/>
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/md_theme_light_surface">
+            style="@style/Widget.Pikaso.CardView.Large"
+            app:cardCornerRadius="@dimen/radius_large"
+            app:cardElevation="0dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/settingsList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"/>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

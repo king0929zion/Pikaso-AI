@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Border Radius - Unified from HTML Prototype -->
+    <dimen name="radius_large">28dp</dimen>
+    <dimen name="radius_medium">16dp</dimen>
+    <dimen name="radius_small">12dp</dimen>
+    <dimen name="radius_pill">999dp</dimen>
+    <dimen name="radius_input">24dp</dimen>
+    <dimen name="radius_bubble">20dp</dimen>
+
+    <!-- Button Sizes -->
+    <dimen name="btn_send_size">36dp</dimen>
+    <dimen name="btn_icon_size">40dp</dimen>
+    <dimen name="btn_new_chat_height">48dp</dimen>
+
+    <!-- Icon Sizes -->
+    <dimen name="icon_tool_size">48dp</dimen>
+    <dimen name="icon_small_size">20dp</dimen>
+
+    <!-- Shadows -->
+    <dimen name="shadow_input">4dp</dimen>
+
+    <!-- Spacing -->
+    <dimen name="spacing_tiny">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">24dp</dimen>
+
+    <!-- Animation Durations -->
+    <integer name="anim_duration_short">150</integer>
+    <integer name="anim_duration_medium">300</integer>
+    <integer name="anim_duration_long">400</integer>
+</resources>

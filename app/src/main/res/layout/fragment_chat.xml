@@ -32,10 +32,10 @@
         android:layout_marginBottom="60dp">
 
         <FrameLayout
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="@dimen/icon_tool_size"
+            android:layout_height="@dimen/icon_tool_size"
             android:background="@drawable/bg_empty_state_icon">
-            
+
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
@@ -68,9 +68,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_input_container"
-        android:elevation="4dp"
+        android:elevation="0dp"
         android:padding="12dp"
-        android:layout_margin="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -85,6 +87,7 @@
             android:maxHeight="160dp"
             android:textSize="16sp"
             android:textColor="@color/md_theme_light_onBackground"
+            android:textColorHint="@color/md_theme_light_onSurfaceVariant"
             android:inputType="textMultiLine"
             android:paddingBottom="8dp"/>
 
@@ -94,35 +97,38 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <ImageButton
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_add"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/md_theme_light_onSurfaceVariant"/>
-                
-            <ImageButton
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_build"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/md_theme_light_onSurfaceVariant"
-                android:layout_marginStart="8dp"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAttach"
+                style="@style/Widget.Pikaso.Button.Icon"
+                android:layout_width="@dimen/btn_send_size"
+                android:layout_height="@dimen/btn_send_size"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTools"
+                style="@style/Widget.Pikaso.Button.Icon"
+                android:layout_width="@dimen/btn_send_size"
+                android:layout_height="@dimen/btn_send_size"
+                android:layout_marginStart="@dimen/spacing_small"
+                app:icon="@drawable/ic_build"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"/>
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"/>
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:fabSize="mini"
-                android:src="@drawable/ic_arrow_upward"
-                app:backgroundTint="@color/md_theme_light_primary"
-                app:tint="@color/md_theme_light_onPrimary"
-                app:elevation="0dp"/>
+                style="@style/Widget.Pikaso.Button.Icon.Circle"
+                android:layout_width="@dimen/btn_send_size"
+                android:layout_height="@dimen/btn_send_size"
+                app:icon="@drawable/ic_arrow_upward"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"/>
 
         </LinearLayout>
     </LinearLayout>
