@@ -8,7 +8,7 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 
 class ChatFragment : Fragment() {
 
@@ -24,7 +24,7 @@ class ChatFragment : Fragment() {
         recyclerView = view.findViewById(R.id.chatRecyclerView)
         emptyState = view.findViewById(R.id.emptyState)
         val input = view.findViewById<EditText>(R.id.chatInput)
-        val btnSend = view.findViewById<FloatingActionButton>(R.id.btnSend)
+        val btnSend = view.findViewById<MaterialButton>(R.id.btnSend)
 
         adapter = ChatAdapter()
         recyclerView.adapter = adapter
@@ -45,7 +45,7 @@ class ChatFragment : Fragment() {
         }
         adapter.addMessage(ChatAdapter.Message(text, true))
         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
-        
+
         // Mock AI response
         view?.postDelayed({
             adapter.addMessage(ChatAdapter.Message("好的，正在为您执行该操作。", false))
