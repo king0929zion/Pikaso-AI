@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.autoglm.AutoGlmOneClickFragment
+import com.example.operit.virtualdisplay.VirtualScreenFragment
 
 class ToolsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -24,6 +25,7 @@ class ToolsFragment : Fragment() {
                 "web2apk" -> Web2ApkFragment()
                 "autoglm" -> AutoGLMFragment()
                 "config" -> AutoGlmOneClickFragment()
+                "virtual_screen" -> VirtualScreenFragment()
                 else -> null
             }
             

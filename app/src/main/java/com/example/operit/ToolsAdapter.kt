@@ -14,6 +14,7 @@ class ToolsAdapter(private val onItemClick: (String) -> Unit) : RecyclerView.Ada
     private val tools = listOf(
         Tool("autoglm", "AutoGLM 执行器", "自动化执行复杂任务，支持多模态交互。", R.drawable.ic_smart_toy),
         Tool("config", "一键配置", "快速设置 AutoGLM 环境参数。", R.drawable.ic_tune),
+        Tool("virtual_screen", "虚拟屏幕", "创建虚拟显示并截图预览（实验）。", R.drawable.ic_grid),
         Tool("process", "解除进程限制", "移除 Android 12+ 幻象进程杀手。", R.drawable.ic_no_encryption),
         Tool("web2apk", "网页转 APK", "将任意网页封装为独立应用。", R.drawable.ic_android)
     )
