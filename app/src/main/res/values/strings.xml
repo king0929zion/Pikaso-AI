@@ -1,0 +1,42 @@
+<resources>
+    <string name="app_name">Operit</string>
+    <string name="nav_new_chat">新对话</string>
+    <string name="nav_chat">对话</string>
+    <string name="nav_tools">工具箱</string>
+    <string name="nav_scripts">脚本</string>
+    <string name="nav_logs">日志</string>
+    <string name="nav_help">帮助</string>
+    <string name="nav_settings">设置</string>
+    <string name="section_menu">菜单</string>
+    <string name="section_history">历史记录</string>
+    <string name="user_name">User</string>
+
+    <!-- Settings -->
+    <string name="settings_language">语言</string>
+    <string name="settings_language_sub">Language</string>
+    <string name="settings_ai">AI 配置</string>
+    <string name="settings_ai_sub">模型选择与参数调整</string>
+    <string name="settings_features">功能配置</string>
+    <string name="settings_features_sub">自定义工具与插件</string>
+    <string name="settings_prompts">提示词配置</string>
+    <string name="settings_prompts_sub">管理系统提示词与预设</string>
+    <string name="settings_permissions">权限配置</string>
+    <string name="settings_permissions_sub">管理应用权限与安全设置</string>
+    
+    <!-- Logs -->
+    <string name="logs_title">系统日志</string>
+    <string name="btn_clear">清除</string>
+    <string name="btn_export">导出</string>
+
+    <!-- Scripts -->
+    <string name="scripts_title">脚本库</string>
+    <string name="btn_new">新建</string>
+
+    <!-- Web2APK -->
+    <string name="web2apk_title">网页转 APK</string>
+    <string name="label_app_name">应用名称</string>
+    <string name="label_url">目标网址 (URL)</string>
+    <string name="label_package">包名 (Package Name)</string>
+    <string name="btn_upload">点击上传 PNG/JPG</string>
+    <string name="btn_pack">开始打包</string>
+</resources>

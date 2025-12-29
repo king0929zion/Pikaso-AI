@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/md_theme_light_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/logs_title"
+            android:textSize="22sp"
+            android:fontFamily="serif"
+            android:textColor="@color/md_theme_light_onBackground"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_clear"
+            android:backgroundTint="@color/md_theme_light_surfaceVariant"
+            android:textColor="@color/md_theme_light_onSurfaceVariant"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_export"
+            android:backgroundTint="@color/md_theme_light_surfaceVariant"
+            android:textColor="@color/md_theme_light_onSurfaceVariant"
+            style="@style/Widget.Material3.Button.TonalButton"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#1E1E1E"
+        android:padding="16dp"
+        android:elevation="0dp">
+
+        <TextView
+            android:id="@+id/tvConsole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="#D4D4D4"
+            android:lineSpacingMultiplier="1.2"
+            android:text="[10:23:45] [System] Service started\n[10:23:46] [AutoGLM] Model loaded successfully"/>
+    </ScrollView>
+
+</LinearLayout>

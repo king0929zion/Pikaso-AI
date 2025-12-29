@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operit</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 style="margin:0;">Operit</h2>
+            </div>
+
+            <button class="new-chat-btn">
+                <span class="material-icons-round">add</span>
+                新对话
+            </button>
+
+            <div class="nav-section">
+                <div class="nav-section-title">菜单</div>
+                <a href="#" class="nav-item active" data-view="chat">
+                    <span class="material-icons-round">chat_bubble_outline</span>
+                    对话
+                </a>
+                <a href="#" class="nav-item" data-view="tools">
+                    <span class="material-icons-round">grid_view</span>
+                    工具箱
+                </a>
+                <a href="#" class="nav-item" data-view="scripts">
+                    <span class="material-icons-round">code</span>
+                    脚本
+                </a>
+                <a href="#" class="nav-item" data-view="logs">
+                    <span class="material-icons-round">terminal</span>
+                    日志
+                </a>
+                <a href="#" class="nav-item" data-view="help">
+                    <span class="material-icons-round">help_outline</span>
+                    帮助
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <span class="material-icons-round">settings</span>
+                    设置
+                </a>
+            </div>
+
+            <div class="nav-section" style="flex: 1; overflow-y: auto;">
+                <div class="nav-section-title">历史记录</div>
+                <div class="history-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- User Profile / Footer -->
+            <div style="padding: 16px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; background: #ccc; border-radius: 50%;"></div>
+                <div style="font-size: 14px; font-weight: 500;">User</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Mobile Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-btn">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                    <button class="back-btn" style="display: none;">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                </div>
+
+                <div class="header-center">
+                    <div class="model-selector">
+                        <span>GPT-4o</span>
+                        <span class="material-icons-round arrow">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button class="header-action-btn new-chat-trigger">
+                        <span class="material-icons-round">add_comment</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- View: Chat (Home) -->
+            <div id="view-chat" class="view chat-view active">
+                <div class="chat-container">
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <span class="material-icons-round">smart_toy</span>
+                        </div>
+                        <h2>有什么可以帮你的吗？</h2>
+                    </div>
+                    <!-- Messages will be appended here -->
+                </div>
+
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea class="chat-input" placeholder="Ask Operit..." rows="1"></textarea>
+                        <div class="input-toolbar">
+                            <div class="toolbar-left">
+                                <button class="icon-btn attach-btn">
+                                    <span class="material-icons-round">add</span>
+                                </button>
+                                <button class="icon-btn tool-btn">
+                                    <span class="material-icons-round">build</span>
+                                </button>
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="send-btn">
+                                    <span class="material-icons-round">arrow_upward</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Tools -->
+            <div id="view-tools" class="view">
+                <h2>工具箱</h2>
+                <div class="tools-grid">
+                    <div class="tool-card primary" onclick="navigateTo('tool-autoglm')">
+                        <div class="tool-icon">
+                            <span class="material-icons-round">smart_toy</span>
+                        </div>
+                        <div class="tool-title">AutoGLM 执行器</div>
+                        <div class="tool-desc">自动化执行复杂任务，支持多模态交互。</div>
+                    </div>
+
+                    <div class="tool-card" onclick="navigateTo('tool-config')">
+                        <div class="tool-icon">
+                            <span class="material-icons-round">tune</span>
+                        </div>
+                        <div class="tool-title">一键配置</div>
+                        <div class="tool-desc">快速设置 AutoGLM 环境参数。</div>
+                    </div>
+
+                    <div class="tool-card" onclick="showToast('幻象进程限制已解除')">
+                        <div class="tool-icon">
+                            <span class="material-icons-round">no_encryption</span>
+                        </div>
+                        <div class="tool-title">解除进程限制</div>
+                        <div class="tool-desc">移除 Android 12+ 幻象进程杀手。</div>
+                    </div>
+
+                    <div class="tool-card" onclick="navigateTo('tool-web2apk')">
+                        <div class="tool-icon">
+                            <span class="material-icons-round">android</span>
+                        </div>
+                        <div class="tool-title">网页转 APK</div>
+                        <div class="tool-desc">将任意网页封装为独立应用。</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Scripts -->
+            <div id="view-scripts" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>脚本库</h2>
+                    <button class="action-btn small">
+                        <span class="material-icons-round">add</span>
+                        新建
+                    </button>
+                </div>
+                <div class="script-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- View: Logs -->
+            <div id="view-logs" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>系统日志</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="action-btn small secondary">清除</button>
+                        <button class="action-btn small secondary">导出</button>
+                    </div>
+                </div>
+                <div class="log-console">
+                    <div class="log-line info"><span class="time">10:23:45</span> <span class="tag">[System]</span> Service started</div>
+                    <div class="log-line info"><span class="time">10:23:46</span> <span class="tag">[AutoGLM]</span> Model loaded successfully</div>
+                    <div class="log-line warn"><span class="time">10:24:12</span> <span class="tag">[Network]</span> Slow connection detected</div>
+                    <div class="log-line debug"><span class="time">10:25:00</span> <span class="tag">[Input]</span> IME switched to Operit</div>
+                </div>
+            </div>
+
+            <!-- View: Help -->
+            <div id="view-help" class="view">
+                <h2>帮助文档</h2>
+                <div class="doc-list">
+                    <div class="doc-item" onclick="navigateTo('doc-detail')">
+                        <span class="material-icons-round">article</span>
+                        <div class="doc-info">
+                            <div class="doc-title">快速开始指南</div>
+                            <div class="doc-meta">README.md</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="material-icons-round">article</span>
+                        <div class="doc-info">
+                            <div class="doc-title">构建与签名</div>
+                            <div class="doc-meta">BUILD_AND_SIGNING.md</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="material-icons-round">article</span>
+                        <div class="doc-info">
+                            <div class="doc-title">工具权限说明</div>
+                            <div class="doc-meta">tool_permissions.md</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: AutoGLM Executor -->
+            <div id="view-tool-autoglm" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>AutoGLM 执行器</h2>
+                </div>
+                
+                <div class="card status-card running">
+                    <div class="status-icon">
+                        <span class="material-icons-round">sync</span>
+                    </div>
+                    <div class="status-info">
+                        <div class="status-label">当前状态</div>
+                        <div class="status-value">运行中</div>
+                    </div>
+                    <button class="action-btn stop">停止</button>
+                </div>
+
+                <h3>任务队列</h3>
+                <div class="task-list">
+                    <div class="task-item active">
+                        <div class="task-icon"><span class="material-icons-round">search</span></div>
+                        <div class="task-content">
+                            <div class="task-title">搜索 Bilibili 视频</div>
+                            <div class="task-progress">
+                                <div class="progress-bar" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-item pending">
+                        <div class="task-icon"><span class="material-icons-round">download</span></div>
+                        <div class="task-content">
+                            <div class="task-title">下载视频内容</div>
+                            <div class="task-status">等待中</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Web to APK -->
+            <div id="view-tool-web2apk" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>网页转 APK</h2>
+                </div>
+
+                <div class="form-container">
+                    <div class="form-group">
+                        <label>应用名称</label>
+                        <input type="text" class="form-input" placeholder="例如：我的应用">
+                    </div>
+                    <div class="form-group">
+                        <label>目标网址 (URL)</label>
+                        <input type="url" class="form-input" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>包名 (Package Name)</label>
+                        <input type="text" class="form-input" placeholder="com.example.app">
+                    </div>
+                    <div class="form-group">
+                        <label>应用图标</label>
+                        <div class="file-upload">
+                            <span class="material-icons-round">upload_file</span>
+                            <span>点击上传 PNG/JPG</span>
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn primary full-width" style="margin-top: 24px;">开始打包</button>
+                </div>
+            </div>
+
+            <!-- Sub-View: Script Editor -->
+            <div id="view-script-editor" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>编辑脚本</h2>
+                    <button class="action-btn small primary" style="margin-left: auto;">保存</button>
+                </div>
+                <div class="code-editor">
+                    <pre><code>// 示例脚本: 12306.js
+import { AutoGLM } from 'operit-core';
+
+async function main() {
+    console.log("Starting 12306 task...");
+    await AutoGLM.launchApp("com.12306.mobile");
+    await AutoGLM.waitForText("查询车票");
+    // ...
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- View: Settings -->
+            <div id="view-settings" class="view">
+                <h2>设置</h2>
+                
+                <div class="settings-list">
+                    <div class="settings-item" onclick="navigateTo('settings-language')">
+                        <span class="material-icons-round" style="margin-right: 16px; color: var(--md-sys-color-on-surface-variant);">language</span>
+                        <div class="settings-info">
+                            <div class="settings-title">语言</div>
+                            <div class="settings-subtitle">Language</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+
+                    <div class="settings-item" onclick="navigateTo('settings-ai')">
+                        <span class="material-icons-round" style="margin-right: 16px; color: var(--md-sys-color-on-surface-variant);">psychology</span>
+                        <div class="settings-info">
+                            <div class="settings-title">AI 配置</div>
+                            <div class="settings-subtitle">模型选择与参数调整</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+
+                    <div class="settings-item" onclick="navigateTo('settings-features')">
+                        <span class="material-icons-round" style="margin-right: 16px; color: var(--md-sys-color-on-surface-variant);">extension</span>
+                        <div class="settings-info">
+                            <div class="settings-title">功能配置</div>
+                            <div class="settings-subtitle">自定义工具与插件</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+
+                    <div class="settings-item" onclick="navigateTo('settings-prompts')">
+                        <span class="material-icons-round" style="margin-right: 16px; color: var(--md-sys-color-on-surface-variant);">edit_note</span>
+                        <div class="settings-info">
+                            <div class="settings-title">提示词配置</div>
+                            <div class="settings-subtitle">管理系统提示词与预设</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+
+                    <div class="settings-item" onclick="navigateTo('settings-permissions')">
+                        <span class="material-icons-round" style="margin-right: 16px; color: var(--md-sys-color-on-surface-variant);">security</span>
+                        <div class="settings-info">
+                            <div class="settings-title">权限配置</div>
+                            <div class="settings-subtitle">管理应用权限与安全设置</div>
+                        </div>
+                        <span class="material-icons-round arrow">chevron_right</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Settings - Language -->
+            <div id="view-settings-language" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>语言 / Language</h2>
+                </div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">简体中文</div>
+                        </div>
+                        <span class="material-icons-round" style="color: var(--md-sys-color-primary);">check</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">English</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Settings - AI Configuration -->
+            <div id="view-settings-ai" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>AI 配置</h2>
+                    <button class="action-btn small primary" style="margin-left: auto;">保存</button>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Provider & Model -->
+                    <div class="settings-card">
+                        <div class="settings-card-title">
+                            <span class="material-icons-round">dns</span>
+                            模型服务
+                        </div>
+                        <div class="form-group">
+                            <label>提供商</label>
+                            <select class="form-input">
+                                <option>OpenAI</option>
+                                <option>Anthropic</option>
+                                <option>Google Gemini</option>
+                                <option>Local (Ollama)</option>
+                                <option>Custom (OpenAI Compatible)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <input type="password" class="form-input" placeholder="sk-...">
+                        </div>
+                        <div class="form-group">
+                            <label>Base URL (Optional)</label>
+                            <input type="text" class="form-input" placeholder="https://api.openai.com/v1">
+                        </div>
+                        <div class="form-group">
+                            <label>模型名称</label>
+                            <input type="text" class="form-input" value="gpt-4o">
+                        </div>
+                    </div>
+
+                    <!-- Generation Parameters -->
+                    <div class="settings-card">
+                        <div class="settings-card-title">
+                            <span class="material-icons-round">tune</span>
+                            生成参数
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>Temperature (随机性)</span>
+                                <span class="slider-value">0.7</span>
+                            </div>
+                            <input type="range" min="0" max="2" step="0.1" value="0.7">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>Top P (核采样)</span>
+                                <span class="slider-value">1.0</span>
+                            </div>
+                            <input type="range" min="0" max="1" step="0.05" value="1.0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>Max Tokens (最大长度)</span>
+                                <span class="slider-value">4096</span>
+                            </div>
+                            <input type="range" min="256" max="32000" step="256" value="4096">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>Presence Penalty (话题新颖度)</span>
+                                <span class="slider-value">0.0</span>
+                            </div>
+                            <input type="range" min="-2" max="2" step="0.1" value="0.0">
+                        </div>
+                    </div>
+
+                    <!-- Context & History -->
+                    <div class="settings-card">
+                        <div class="settings-card-title">
+                            <span class="material-icons-round">history</span>
+                            上下文管理
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>历史消息携带数</span>
+                                <span class="slider-value">10</span>
+                            </div>
+                            <input type="range" min="0" max="50" step="1" value="10">
+                        </div>
+
+                        <div class="settings-item" style="padding: 12px 0; border: none;">
+                            <div class="settings-info">
+                                <div class="settings-title" style="font-size: 14px;">流式响应 (Stream)</div>
+                            </div>
+                            <div class="switch on"></div>
+                        </div>
+
+                        <div class="settings-item" style="padding: 12px 0; border: none;">
+                            <div class="settings-info">
+                                <div class="settings-title" style="font-size: 14px;">JSON 模式</div>
+                            </div>
+                            <div class="switch"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Settings - Feature Configuration -->
+            <div id="view-settings-features" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>功能配置</h2>
+                </div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">自动截图分析</div>
+                            <div class="settings-subtitle">允许 AI 自动获取屏幕截图进行分析</div>
+                        </div>
+                        <div class="switch on"></div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">后台运行</div>
+                            <div class="settings-subtitle">允许应用在后台持续执行任务</div>
+                        </div>
+                        <div class="switch on"></div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">网络搜索增强</div>
+                            <div class="settings-subtitle">允许 AI 访问互联网获取最新信息</div>
+                        </div>
+                        <div class="switch"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Settings - Prompt Configuration -->
+            <div id="view-settings-prompts" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>提示词配置</h2>
+                    <div style="margin-left: auto; display: flex; gap: 8px;">
+                        <button class="action-btn small">重置</button>
+                        <button class="action-btn small primary">保存</button>
+                    </div>
+                </div>
+                
+                <div class="prompt-editor-container">
+                    <div class="settings-card" style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="settings-card-title" style="justify-content: space-between;">
+                            <span>系统提示词 (System Prompt)</span>
+                            <select class="form-input" style="width: auto; padding: 4px 24px 4px 12px; font-size: 13px;">
+                                <option>默认助手</option>
+                                <option>代码专家</option>
+                                <option>翻译助手</option>
+                            </select>
+                        </div>
+                        
+                        <div class="prompt-toolbar">
+                            <div class="variable-chip" onclick="insertVar('{{clipboard}}')">+ 剪贴板内容</div>
+                            <div class="variable-chip" onclick="insertVar('{{current_app}}')">+ 当前应用</div>
+                            <div class="variable-chip" onclick="insertVar('{{screen_text}}')">+ 屏幕文字</div>
+                            <div class="variable-chip" onclick="insertVar('{{time}}')">+ 当前时间</div>
+                            <div class="variable-chip" onclick="insertVar('{{location}}')">+ 地理位置</div>
+                        </div>
+
+                        <textarea class="form-input" style="flex: 1; margin-top: 12px; font-family: var(--font-mono); font-size: 14px; line-height: 1.6;" spellcheck="false">你是一个智能手机助手，可以帮助用户操作手机应用。
+请优先使用无障碍服务进行点击和滑动操作。
+当用户请求模糊时，请主动询问更多细节。
+你可以使用以下工具：
+1. open_app(package_name)
+2. click(x, y)
+3. scroll(direction)
+...</textarea>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-card-title">
+                            <span>Few-shot Examples (示例)</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <textarea class="form-input" rows="3" placeholder="User: 打开微信&#10;Assistant: 好的，正在为您打开微信..." style="font-family: var(--font-mono); font-size: 13px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-View: Settings - Permission Configuration -->
+            <div id="view-settings-permissions" class="view sub-view">
+                <div class="sub-header">
+                    <button class="back-link" onclick="goBack()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <h2>权限配置</h2>
+                </div>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">无障碍服务</div>
+                            <div class="settings-subtitle">用于模拟点击和滑动</div>
+                        </div>
+                        <div class="switch on"></div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">Shizuku</div>
+                            <div class="settings-subtitle">用于高级系统操作</div>
+                        </div>
+                        <div class="switch on"></div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">悬浮窗权限</div>
+                            <div class="settings-subtitle">用于显示虚拟屏幕 Overlay</div>
+                        </div>
+                        <div class="switch on"></div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-title">Operit 输入法</div>
+                            <div class="settings-subtitle">用于自动文本输入</div>
+                        </div>
+                        <div class="switch"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

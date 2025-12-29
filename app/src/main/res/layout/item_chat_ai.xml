@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Operit"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:textColor="@color/md_theme_light_onSurfaceVariant"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvMessage"
+        style="@style/ChatBubble.Ai"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AI Response"/>
+
+</LinearLayout>
