@@ -1,10 +1,14 @@
 package com.example.operit
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.markdown.MarkdownRenderer
+import com.google.android.material.snackbar.Snackbar
 
 class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -43,7 +47,21 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
         fun bind(message: Message) {
-            tvMessage.text = message.text
+            if (message.isUser) {
+                tvMessage.text = message.text
+            } else {
+                MarkdownRenderer.render(tvMessage, message.text)
+            }
+
+            itemView.setOnLongClickListener {
+                val text = message.text.trim()
+                if (text.isNotEmpty()) {
+                    val clipboard = it.context.getSystemService(ClipboardManager::class.java)
+                    clipboard?.setPrimaryClip(ClipData.newPlainText("message", text))
+                    Snackbar.make(it, "已复制到剪贴板", Snackbar.LENGTH_SHORT).show()
+                }
+                true
+            }
         }
     }
 }

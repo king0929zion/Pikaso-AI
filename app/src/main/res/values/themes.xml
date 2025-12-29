@@ -122,7 +122,7 @@
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/md_theme_light_onSurface</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:drawablePadding">12dp</item>
         <item name="android:background">?attr/selectableItemBackground</item>
@@ -131,7 +131,7 @@
     <!-- Nav Item Active - Pill shape -->
     <style name="Widget.Pikaso.NavItem.Active" parent="Widget.Pikaso.NavItem">
         <item name="android:background">@drawable/bg_nav_item_active</item>
-        <item name="android:textColor">@color/md_theme_light_onSecondaryContainer</item>
+        <item name="android:textColor">?attr/colorOnSecondaryContainer</item>
         <item name="android:textStyle">normal</item>
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:fontWeight">500</item>

@@ -27,6 +27,11 @@
     <dimen name="spacing_large">16dp</dimen>
     <dimen name="spacing_xlarge">24dp</dimen>
 
+    <!-- Chat -->
+    <dimen name="chat_item_padding_horizontal">16dp</dimen>
+    <dimen name="chat_item_padding_vertical">6dp</dimen>
+    <dimen name="chat_bubble_max_width">320dp</dimen>
+
     <!-- Animation Durations -->
     <integer name="anim_duration_short">150</integer>
     <integer name="anim_duration_medium">300</integer>

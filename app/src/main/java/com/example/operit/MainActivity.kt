@@ -9,7 +9,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
+import com.google.android.material.color.MaterialColors
 import com.example.operit.ai.AiPreferences
 import com.example.operit.chat.ChatStore
 
@@ -120,12 +120,12 @@ class MainActivity : AppCompatActivity() {
             if (id == activeId) {
                 // Apply Active Style - pill shape
                 view.setBackgroundResource(R.drawable.bg_nav_item_active)
-                view.setTextColor(getColor(R.color.md_theme_light_onSecondaryContainer))
+                view.setTextColor(MaterialColors.getColor(view, com.google.android.material.R.attr.colorOnSecondaryContainer))
             } else {
                 val outValue = android.util.TypedValue()
                 theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
                 view.setBackgroundResource(outValue.resourceId)
-                view.setTextColor(getColor(R.color.md_theme_light_onSurface))
+                view.setTextColor(MaterialColors.getColor(view, com.google.android.material.R.attr.colorOnSurface))
             }
         }
     }
@@ -171,6 +171,9 @@ class MainActivity : AppCompatActivity() {
         val name = fragment.javaClass.simpleName
         val show = !name.startsWith("Settings")
         header.isVisible = show
+        drawerLayout.setDrawerLockMode(
+            if (name.startsWith("Settings")) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+        )
         if (show) updateHeaderModelName()
     }
 

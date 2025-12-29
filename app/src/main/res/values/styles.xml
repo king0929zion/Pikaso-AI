@@ -2,22 +2,21 @@
 <resources>
     <!-- Chat Bubble Styles -->
     <style name="ChatBubble">
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:paddingTop">16dp</item>
-        <item name="android:paddingBottom">16dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
         <item name="android:textSize">16sp</item>
-        <item name="android:lineSpacingMultiplier">1.2</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
     <style name="ChatBubble.User" parent="ChatBubble">
         <item name="android:background">@drawable/bg_chat_bubble_user</item>
-        <item name="android:textColor">@color/md_theme_light_onBackground</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
     </style>
 
     <style name="ChatBubble.Ai" parent="ChatBubble">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:paddingStart">0dp</item>
-        <item name="android:textColor">@color/md_theme_light_onBackground</item>
+        <item name="android:background">@drawable/bg_chat_bubble_ai</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 </resources>

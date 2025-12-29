@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@color/md_theme_light_background">
+        android:background="?attr/colorBackground">
 
         <!-- Header -->
         <RelativeLayout
@@ -21,7 +21,7 @@
             android:layout_height="64dp"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:background="@color/md_theme_light_background">
+            android:background="?attr/colorBackground">
 
             <!-- Menu Button -->
             <ImageButton
@@ -31,7 +31,7 @@
                 android:src="@drawable/ic_menu"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_centerVertical="true"
-                app:tint="@color/md_theme_light_onBackground"/>
+                app:tint="?attr/colorOnSurface"/>
 
             <!-- Model Selector (Center) -->
             <LinearLayout
@@ -50,14 +50,14 @@
                     android:layout_height="wrap_content"
                     android:text="GPT-4o"
                     android:textStyle="bold"
-                    android:textColor="@color/md_theme_light_onSurfaceVariant"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="15sp"/>
                 
                 <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_expand_more"
-                    app:tint="@color/md_theme_light_outline"
+                    app:tint="?attr/colorOnSurfaceVariant"
                     android:layout_marginStart="4dp"/>
             </LinearLayout>
 
@@ -70,7 +70,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                app:tint="@color/md_theme_light_onBackground"/>
+                app:tint="?attr/colorOnSurface"/>
         </RelativeLayout>
 
         <!-- Fragment Container -->

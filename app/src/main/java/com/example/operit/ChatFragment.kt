@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,9 +26,12 @@ class ChatFragment : Fragment() {
     private lateinit var adapter: ChatAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyState: View
+    private lateinit var input: EditText
+    private lateinit var btnSend: MaterialButton
 
     private var inFlightCall: Call? = null
     private var isSending = false
+    private var placeholderPos: Int? = null
 
     private val chatClient = OpenAiChatClient()
     private val conversation = mutableListOf<OpenAiChatClient.Message>()
@@ -44,13 +48,14 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = view.findViewById(R.id.chatRecyclerView)
         emptyState = view.findViewById(R.id.emptyState)
-        val input = view.findViewById<EditText>(R.id.chatInput)
-        val btnSend = view.findViewById<MaterialButton>(R.id.btnSend)
+        input = view.findViewById(R.id.chatInput)
+        btnSend = view.findViewById(R.id.btnSend)
         val btnTools = view.findViewById<View>(R.id.btnTools)
         val btnAttach = view.findViewById<View>(R.id.btnAttach)
 
         adapter = ChatAdapter()
         recyclerView.adapter = adapter
+        recyclerView.itemAnimator = null
         recyclerView.layoutManager = LinearLayoutManager(context)
 
         btnTools.setOnClickListener {
@@ -63,15 +68,57 @@ class ChatFragment : Fragment() {
             Toast.makeText(requireContext(), "附件功能后续迁移", Toast.LENGTH_SHORT).show()
         }
 
-        btnSend.setOnClickListener {
-            val text = input.text.toString()
-            if (text.isNotBlank()) {
-                sendMessage(text)
-                input.text.clear()
+        btnSend.setOnClickListener { onSendClicked() }
+        input.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN && event.isCtrlPressed) {
+                onSendClicked()
+                true
+            } else {
+                false
             }
         }
+        recyclerView.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                input.clearFocus()
+                hideKeyboard()
+            }
+            false
+        }
+
+        updateSendingUi()
 
         ensureSessionLoaded()
+    }
+
+    private fun onSendClicked() {
+        val ctx = context ?: return
+        if (isSending) {
+            inFlightCall?.cancel()
+            isSending = false
+            placeholderPos?.let { adapter.updateMessage(it, "已取消") }
+            Toast.makeText(ctx, "已取消", Toast.LENGTH_SHORT).show()
+            updateSendingUi()
+            return
+        }
+
+        val text = input.text.toString()
+        if (text.isNotBlank()) {
+            sendMessage(text)
+            input.text.clear()
+            hideKeyboard()
+        }
+    }
+
+    private fun updateSendingUi() {
+        if (!::btnSend.isInitialized) return
+        btnSend.isEnabled = true
+        btnSend.setIconResource(if (isSending) R.drawable.ic_stop else R.drawable.ic_arrow_upward)
+        btnSend.contentDescription = if (isSending) "取消" else "发送"
+    }
+
+    private fun hideKeyboard() {
+        val imm = context?.getSystemService(android.view.inputmethod.InputMethodManager::class.java) ?: return
+        imm.hideSoftInputFromWindow(input.windowToken, 0)
     }
 
     private fun ensureSessionLoaded() {
@@ -163,10 +210,11 @@ class ChatFragment : Fragment() {
         persistAsync()
 
         isSending = true
-        val placeholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+        updateSendingUi()
+        placeholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
-        runToolLoop(settings = settings, placeholderPos = placeholderPos, round = 0)
+        runToolLoop(settings = settings, placeholderPos = placeholderPos ?: -1, round = 0)
     }
 
     private fun runToolLoop(
@@ -181,6 +229,7 @@ class ChatFragment : Fragment() {
             adapter.updateMessage(placeholderPos, "已达到工具调用轮次上限，请把下一步需求说得更具体一些。")
             recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
             persistAsync()
+            updateSendingUi()
             return
         }
 
@@ -213,6 +262,7 @@ class ChatFragment : Fragment() {
                                     isSending = false
                                     AppLog.i("Chat", "request ok (no tools)")
                                     persistAsync()
+                                    updateSendingUi()
                                     return@fold
                                 }
 
@@ -253,6 +303,7 @@ class ChatFragment : Fragment() {
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
                                         val nextPlaceholder = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+                                        placeholderPos = nextPlaceholder
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                                         runToolLoop(settings, nextPlaceholder, round + 1)
                                     }
@@ -267,6 +318,7 @@ class ChatFragment : Fragment() {
                                 recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                                 Toast.makeText(ctx, "AI 调用失败（可检查 API Key/Endpoint）", Toast.LENGTH_SHORT).show()
                                 persistAsync()
+                                updateSendingUi()
                             },
                         )
                     }
@@ -284,4 +336,3 @@ class ChatFragment : Fragment() {
         const val ARG_SESSION_ID = "session_id"
     }
 }
-

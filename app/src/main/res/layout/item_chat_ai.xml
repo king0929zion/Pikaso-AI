@@ -3,22 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:paddingStart="@dimen/chat_item_padding_horizontal"
+    android:paddingEnd="@dimen/chat_item_padding_horizontal"
+    android:paddingTop="@dimen/chat_item_padding_vertical"
+    android:paddingBottom="@dimen/chat_item_padding_vertical">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Pikaso"
-        android:textStyle="bold"
-        android:textSize="12sp"
-        android:textColor="@color/md_theme_light_onSurfaceVariant"
-        android:layout_marginBottom="4dp"/>
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginBottom="@dimen/spacing_tiny" />
 
     <TextView
         android:id="@+id/tvMessage"
         style="@style/ChatBubble.Ai"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:maxWidth="@dimen/chat_bubble_max_width"
         android:text="AI Response"/>
 
 </LinearLayout>

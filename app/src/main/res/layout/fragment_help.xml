@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_light_background">
+    android:background="?attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,18 +15,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="帮助"
-            android:textSize="22sp"
-            android:fontFamily="serif"
-            android:textColor="@color/md_theme_light_onBackground"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnBackground"
             android:layout_marginBottom="12dp"/>
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/md_theme_light_surface">
+            style="@style/Widget.Pikaso.CardView.Large"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -40,7 +38,7 @@
                     android:layout_height="wrap_content"
                     android:text="版本：-"
                     android:textSize="14sp"
-                    android:textColor="@color/md_theme_light_onSurface"/>
+                    android:textColor="?attr/colorOnSurface"/>
 
                 <TextView
                     android:layout_width="match_parent"
@@ -48,16 +46,15 @@
                     android:layout_marginTop="8dp"
                     android:text="当前版本为逐模块迁移阶段：部分页面已接入真实逻辑（AI 对话/AutoGLM/权限/虚拟屏幕/脚本/日志），其余模块会继续无缝迁移。"
                     android:textSize="13sp"
-                    android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    android:textColor="?attr/colorOnSurfaceVariant"/>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/md_theme_light_surface">
+            style="@style/Widget.Pikaso.CardView.Large"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,7 +71,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenRepo"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -82,7 +79,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenIssues"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -90,7 +87,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenPermissions"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -98,14 +95,13 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnOpenTools"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="打开工具箱" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
-

@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_light_background">
+    android:background="?attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/md_theme_light_background">
+        android:background="?attr/colorBackground">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="建议按顺序开启：无障碍 → Shizuku → 悬浮窗 → 电池优化 → 通知/存储/定位。"
-                android:textColor="@color/md_theme_light_onSurfaceVariant"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp"
                 android:layout_marginBottom="12dp" />
 
@@ -44,9 +44,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -67,7 +67,7 @@
                             android:text="无障碍服务（必需）"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipAccessibilityStatus"
@@ -75,8 +75,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未开启"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -85,7 +85,7 @@
                         android:layout_marginTop="6dp"
                         android:text="AutoGLM 执行链路依赖无障碍来执行点击/滑动/输入等操作。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -112,9 +112,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -135,7 +135,7 @@
                             android:text="Shizuku 权限（推荐）"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipShizukuStatus"
@@ -143,8 +143,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未启动"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -153,7 +153,7 @@
                         android:layout_marginTop="6dp"
                         android:text="用于获得更强的系统能力（ADB 级），无需 Root。需要先启动 Shizuku 服务并授予权限。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -189,9 +189,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -212,7 +212,7 @@
                             android:text="悬浮窗权限"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipOverlayStatus"
@@ -220,8 +220,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未授权"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -230,7 +230,7 @@
                         android:layout_marginTop="6dp"
                         android:text="用于部分浮层提示/工具窗口（按需）。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -257,9 +257,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -280,7 +280,7 @@
                             android:text="电池优化白名单"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipBatteryStatus"
@@ -288,8 +288,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未开启"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -298,7 +298,7 @@
                         android:layout_marginTop="6dp"
                         android:text="避免后台执行时被系统限制/杀进程。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -325,9 +325,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -348,7 +348,7 @@
                             android:text="通知权限"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipNotificationsStatus"
@@ -356,8 +356,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未授权"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -366,7 +366,7 @@
                         android:layout_marginTop="6dp"
                         android:text="用于任务状态、下载与系统提示。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -393,9 +393,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -416,7 +416,7 @@
                             android:text="存储权限"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipStorageStatus"
@@ -424,8 +424,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未授权"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -434,7 +434,7 @@
                         android:layout_marginTop="6dp"
                         android:text="用于导入/导出与文件读写（按需）。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -461,9 +461,9 @@
                 android:layout_marginBottom="12dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -484,7 +484,7 @@
                             android:text="定位权限"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/md_theme_light_onSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipLocationStatus"
@@ -492,8 +492,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="未授权"
-                            app:chipBackgroundColor="@color/md_theme_light_surfaceVariant"
-                            android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
                     </LinearLayout>
 
                     <TextView
@@ -502,7 +502,7 @@
                         android:layout_marginTop="6dp"
                         android:text="用于部分系统能力（例如 Wi‑Fi 相关查询等）。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -527,9 +527,9 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/md_theme_light_surfaceVariant"
+                app:strokeColor="?attr/colorOutlineVariant"
                 app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/md_theme_light_surface">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -542,7 +542,7 @@
                         android:layout_height="wrap_content"
                         android:text="提示"
                         android:textStyle="bold"
-                        android:textColor="@color/md_theme_light_onSurface" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -550,7 +550,7 @@
                         android:layout_marginTop="6dp"
                         android:text="无障碍属于敏感权限：请只在你信任的场景开启，并随时可在系统设置中关闭。"
                         android:textSize="13sp"
-                        android:textColor="@color/md_theme_light_onSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>

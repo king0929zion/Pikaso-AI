@@ -3,17 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_light_background">
+    android:background="?attr/colorBackground">
 
     <!-- Chat RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingBottom="100dp"
+        android:paddingTop="@dimen/spacing_small"
+        android:paddingBottom="@dimen/spacing_small"
         android:clipToPadding="false"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/inputAreaContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -41,16 +42,15 @@
                 android:layout_height="32dp"
                 android:src="@drawable/ic_smart_toy"
                 android:layout_gravity="center"
-                app:tint="@color/md_theme_light_onSurfaceVariant"/>
+                app:tint="?attr/colorOnSurfaceVariant"/>
         </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="有什么可以帮你的吗？"
-            android:textSize="22sp"
-            android:textColor="@color/md_theme_light_onBackground"
-            android:fontFamily="serif"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnBackground"
             android:layout_marginTop="24dp"/>
     </LinearLayout>
 
@@ -70,9 +70,9 @@
         android:background="@drawable/bg_input_container"
         android:elevation="0dp"
         android:padding="12dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginEnd="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -81,13 +81,13 @@
             android:id="@+id/chatInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Ask Pikaso..."
+            android:hint="给 Pikaso 发消息…"
             android:background="@null"
             android:minHeight="48dp"
             android:maxHeight="160dp"
             android:textSize="16sp"
-            android:textColor="@color/md_theme_light_onBackground"
-            android:textColorHint="@color/md_theme_light_onSurfaceVariant"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:inputType="textMultiLine"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
@@ -106,7 +106,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_add"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/md_theme_light_onSurfaceVariant"/>
+                app:tint="?attr/colorOnSurfaceVariant"/>
 
             <!-- Tools button - no background, better icon -->
             <ImageButton
@@ -116,7 +116,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_extension"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/md_theme_light_onSurfaceVariant"/>
+                app:tint="?attr/colorOnSurfaceVariant"/>
 
             <View
                 android:layout_width="0dp"
