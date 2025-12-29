@@ -6,6 +6,7 @@ import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
+import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
@@ -13,6 +14,7 @@ import androidx.fragment.app.FragmentTransaction
 class MainActivity : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
+    private lateinit var header: View
     private var currentFragmentTag: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         drawerLayout = findViewById(R.id.drawerLayout)
+        header = findViewById(R.id.header)
 
         // Handle Back Press
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
@@ -40,6 +43,14 @@ class MainActivity : AppCompatActivity() {
         // Header interactions
         findViewById<View>(R.id.btnMenu).setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
+        }
+        findViewById<View>(R.id.btnHeaderAction).setOnClickListener {
+            loadFragment(ChatFragment(), "chat", true)
+            updateSidebarActiveState(R.id.navChat)
+        }
+        findViewById<View>(R.id.modelSelector).setOnClickListener {
+            loadFragment(SettingsAiFragment(), "settings_ai", true)
+            updateSidebarActiveState(R.id.navSettings)
         }
 
         // Sidebar interactions
@@ -127,5 +138,13 @@ class MainActivity : AppCompatActivity() {
 
         transaction.commit()
         currentFragmentTag = tag
+
+        updateHeaderVisibility(existingFragment ?: fragment)
+    }
+
+    private fun updateHeaderVisibility(fragment: Fragment) {
+        // 设置页及其子页面不需要顶部“模型选择/新对话”栏
+        val name = fragment.javaClass.simpleName
+        header.isVisible = !name.startsWith("Settings")
     }
 }

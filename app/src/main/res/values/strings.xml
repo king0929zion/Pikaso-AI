@@ -39,4 +39,7 @@
     <string name="label_package">包名 (Package Name)</string>
     <string name="btn_upload">点击上传 PNG/JPG</string>
     <string name="btn_pack">开始打包</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_service_desc">用于 AutoGLM 手机自动化：执行点击/滑动/输入等操作。仅在你开启无障碍服务后生效。</string>
 </resources>
