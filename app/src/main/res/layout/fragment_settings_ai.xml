@@ -39,6 +39,7 @@
                 android:layout_marginStart="16dp"/>
                 
             <Button
+                android:id="@+id/btnSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="保存"
@@ -76,17 +77,28 @@
                         android:textSize="16sp"
                         android:layout_marginBottom="16dp"/>
                         
-                    <!-- Spinner Mock -->
                     <TextView
+                        android:id="@+id/tvProvider"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Google Gemini"
+                        android:text="智谱（OpenAI兼容）"
                         android:background="@drawable/bg_input_container"
                         android:padding="12dp"
                         android:drawableEnd="@drawable/ic_expand_more"
                         android:layout_marginBottom="12dp"/>
-                        
+
                     <EditText
+                        android:id="@+id/etEndpoint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Endpoint（OpenAI兼容，可填基础URL）"
+                        android:background="@drawable/bg_input_container"
+                        android:padding="12dp"
+                        android:inputType="textUri"
+                        android:layout_marginBottom="12dp"/>
+
+                    <EditText
+                        android:id="@+id/etApiKey"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="API Key"
@@ -94,12 +106,12 @@
                         android:padding="12dp"
                         android:inputType="textPassword"
                         android:layout_marginBottom="12dp"/>
-                        
+
                     <EditText
+                        android:id="@+id/etModel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Model Name (e.g. gpt-4o)"
-                        android:text="gpt-4o"
+                        android:hint="模型名（例如：glm-4-flash / gpt-4o-mini）"
                         android:background="@drawable/bg_input_container"
                         android:padding="12dp"/>
 
