@@ -11,3 +11,7 @@ local.properties
 app/build/
 app/release.keystore.b64
 # app/release.keystore is usually ignored but we committed it. Keeping it visible for now or ignoring for future.
+
+# CI debug artifacts (local downloads)
+run_*_logs.zip
+artifact_*.zip
