@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -14,7 +13,8 @@ import com.example.operit.R
 import com.example.operit.ai.AiPreferences
 import com.example.operit.ai.AiProvider
 import com.example.operit.ai.AiSettings
-import com.google.android.material.button.MaterialButton
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.textfield.TextInputEditText
 
 class AutoGlmOneClickFragment : Fragment() {
     override fun onCreateView(
@@ -26,21 +26,27 @@ class AutoGlmOneClickFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.btnBack).setOnClickListener {
+        view.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        val etApiKey = view.findViewById<EditText>(R.id.etApiKey)
-        val etEndpoint = view.findViewById<EditText>(R.id.etEndpoint)
-        val etModel = view.findViewById<EditText>(R.id.etModel)
+        val etApiKey = view.findViewById<TextInputEditText>(R.id.etApiKey)
+        val tvEffectiveConfig = view.findViewById<TextView>(R.id.tvEffectiveConfig)
         val tvStatus = view.findViewById<TextView>(R.id.tvStatus)
 
         val prefs = AiPreferences.get(requireContext())
         val existing = prefs.load(AiPreferences.PROFILE_UI_CONTROLLER)
-        etEndpoint.setText(existing.endpoint)
-        etModel.setText(existing.model)
+        if (existing.provider == AiProvider.ZHIPU && existing.apiKey.isNotBlank()) {
+            tvStatus.text = "已检测到现有 AutoGLM 配置（UI 控制器）：${existing.model}"
+        } else {
+            tvStatus.text = "未配置 AutoGLM（UI 控制器）。"
+        }
 
-        view.findViewById<MaterialButton>(R.id.btnOpenApiKeyPage).setOnClickListener {
+        val endpoint = AiProvider.ZHIPU.defaultEndpoint
+        val model = "autoglm-phone"
+        tvEffectiveConfig.text = "将自动配置：智谱 / $model\nEndpoint：$endpoint"
+
+        view.findViewById<View>(R.id.btnOpenApiKeyPage).setOnClickListener {
             val url = "https://open.bigmodel.cn/usercenter/apikeys"
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -49,36 +55,29 @@ class AutoGlmOneClickFragment : Fragment() {
             }
         }
 
-        view.findViewById<MaterialButton>(R.id.btnConfigure).setOnClickListener {
-            val apiKey = etApiKey.text.toString().trim()
-            val endpointInput = etEndpoint.text.toString().trim()
-            val modelInput = etModel.text.toString().trim()
-
+        view.findViewById<View>(R.id.btnConfigure).setOnClickListener {
+            val apiKey = etApiKey.text?.toString().orEmpty().trim()
             if (apiKey.isBlank()) {
                 tvStatus.text = "请先填写智谱 API Key。"
                 return@setOnClickListener
             }
 
-            val endpoint = endpointInput.ifBlank { AiProvider.ZHIPU.defaultEndpoint }
-            val model = modelInput.ifBlank { "autoglm-phone" }
-
-            val provider = if (endpoint == AiProvider.ZHIPU.defaultEndpoint) AiProvider.ZHIPU else AiProvider.CUSTOM
-
+            // Operit 设计：AutoGLM 模型配置独立于主对话（写入 UI_CONTROLLER profile）
             prefs.save(
                 AiPreferences.PROFILE_UI_CONTROLLER,
                 AiSettings(
-                    provider = provider,
+                    provider = AiProvider.ZHIPU,
                     endpoint = endpoint,
                     apiKey = apiKey,
                     model = model,
                     temperature = 0.0f,
-                    topP = 0.85f,
+                    topP = 0.8f,
                     maxTokens = 4096,
                 ),
             )
 
             tvStatus.text =
-                "已完成 AutoGLM 一键配置：\n- 已写入 UI 控制器模型配置（$model）\n- Endpoint：$endpoint\n\n现在可以回到工具箱使用“AutoGLM 执行器”。"
+                "已完成 AutoGLM 一键配置 ✅\n- 写入 UI 控制器模型：$model\n- Endpoint：$endpoint\n\n现在可以返回工具箱使用“AutoGLM 执行器”。"
         }
     }
 }

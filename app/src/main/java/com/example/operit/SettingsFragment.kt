@@ -16,6 +16,10 @@ class SettingsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        view.findViewById<View>(R.id.btnBack).setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
         val recyclerView = view.findViewById<RecyclerView>(R.id.settingsList)
         recyclerView.layoutManager = LinearLayoutManager(context)
 

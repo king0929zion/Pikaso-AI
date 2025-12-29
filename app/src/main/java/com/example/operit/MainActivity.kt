@@ -30,6 +30,11 @@ class MainActivity : AppCompatActivity() {
         header = findViewById(R.id.header)
         tvModelName = findViewById(R.id.tvModelName)
 
+        supportFragmentManager.addOnBackStackChangedListener {
+            val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+            if (current != null) updateHeaderVisibility(current)
+        }
+
         // Handle Back Press
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -54,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             openNewChat()
         }
         findViewById<View>(R.id.modelSelector).setOnClickListener {
-            loadFragment(SettingsAiFragment(), "settings_ai", true)
+            loadFragment(SettingsAiFragment(), "settings_ai", true, addToBackStack = true)
             updateSidebarActiveState(R.id.navSettings)
         }
 
@@ -82,7 +87,8 @@ class MainActivity : AppCompatActivity() {
         navItems.forEach { (id, fragment) ->
             findViewById<View>(id).setOnClickListener {
                 if (currentFragmentTag != id.toString()) {
-                    loadFragment(fragment, id.toString(), true)
+                    val addToBackStack = id != R.id.navChat
+                    loadFragment(fragment, id.toString(), true, addToBackStack = addToBackStack)
                     updateSidebarActiveState(id)
                 }
                 drawerLayout.closeDrawer(GravityCompat.START)
@@ -124,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadFragment(fragment: Fragment, tag: String, animate: Boolean) {
+    private fun loadFragment(fragment: Fragment, tag: String, animate: Boolean, addToBackStack: Boolean = false) {
         val existingFragment =
             if (tag.startsWith("chat:")) {
                 null
@@ -151,6 +157,9 @@ class MainActivity : AppCompatActivity() {
             transaction.replace(R.id.fragmentContainer, fragment, tag)
         }
 
+        if (addToBackStack) {
+            transaction.addToBackStack(tag)
+        }
         transaction.commit()
         currentFragmentTag = tag
 
@@ -169,6 +178,10 @@ class MainActivity : AppCompatActivity() {
         val settings = AiPreferences.get(this).load()
         val model = settings.model.trim()
         tvModelName.text = if (model.isNotBlank()) model else "Model"
+    }
+
+    fun refreshHeaderModelName() {
+        updateHeaderModelName()
     }
 
     fun refreshHistory() {

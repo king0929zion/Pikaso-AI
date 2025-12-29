@@ -17,8 +17,10 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.operit.accessibility.AccessibilityStatus
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
+import rikka.shizuku.Shizuku
 
 class SettingsPermissionsFragment : Fragment() {
     private lateinit var chipAccessibility: Chip
@@ -27,6 +29,7 @@ class SettingsPermissionsFragment : Fragment() {
     private lateinit var chipNotifications: Chip
     private lateinit var chipStorage: Chip
     private lateinit var chipLocation: Chip
+    private lateinit var chipShizuku: Chip
 
     private lateinit var btnAccessibility: MaterialButton
     private lateinit var btnOverlay: MaterialButton
@@ -34,19 +37,32 @@ class SettingsPermissionsFragment : Fragment() {
     private lateinit var btnNotifications: MaterialButton
     private lateinit var btnStorage: MaterialButton
     private lateinit var btnLocation: MaterialButton
+    private lateinit var btnShizukuOpen: MaterialButton
+    private lateinit var btnShizukuRequest: MaterialButton
+
+    private val shizukuPermissionListener =
+        Shizuku.OnRequestPermissionResultListener { requestCode, _ ->
+            if (requestCode == REQ_SHIZUKU) refreshUi()
+        }
+
+    private val shizukuBinderListener =
+        Shizuku.OnBinderReceivedListener {
+            refreshUi()
+        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_settings_permissions, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.btnBack).setOnClickListener {
+        view.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
         chipAccessibility = view.findViewById(R.id.chipAccessibilityStatus)
         chipOverlay = view.findViewById(R.id.chipOverlayStatus)
         chipBattery = view.findViewById(R.id.chipBatteryStatus)
+        chipShizuku = view.findViewById(R.id.chipShizukuStatus)
         chipNotifications = view.findViewById(R.id.chipNotificationsStatus)
         chipStorage = view.findViewById(R.id.chipStorageStatus)
         chipLocation = view.findViewById(R.id.chipLocationStatus)
@@ -54,6 +70,8 @@ class SettingsPermissionsFragment : Fragment() {
         btnAccessibility = view.findViewById(R.id.btnAccessibility)
         btnOverlay = view.findViewById(R.id.btnOverlay)
         btnBattery = view.findViewById(R.id.btnBattery)
+        btnShizukuOpen = view.findViewById(R.id.btnShizukuOpen)
+        btnShizukuRequest = view.findViewById(R.id.btnShizukuRequest)
         btnNotifications = view.findViewById(R.id.btnNotifications)
         btnStorage = view.findViewById(R.id.btnStorage)
         btnLocation = view.findViewById(R.id.btnLocation)
@@ -64,6 +82,11 @@ class SettingsPermissionsFragment : Fragment() {
         btnStorage.setOnClickListener { requestStoragePermission() }
         btnLocation.setOnClickListener { requestLocationPermission() }
         btnNotifications.setOnClickListener { requestNotificationPermissionOrOpenSettings() }
+        btnShizukuOpen.setOnClickListener { openShizukuAppOrSite() }
+        btnShizukuRequest.setOnClickListener { requestShizukuPermission() }
+
+        Shizuku.addBinderReceivedListener(shizukuBinderListener)
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
 
         refreshUi()
     }
@@ -71,6 +94,12 @@ class SettingsPermissionsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         refreshUi()
+    }
+
+    override fun onDestroyView() {
+        runCatching { Shizuku.removeBinderReceivedListener(shizukuBinderListener) }
+        runCatching { Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener) }
+        super.onDestroyView()
     }
 
     private fun refreshUi() {
@@ -88,6 +117,8 @@ class SettingsPermissionsFragment : Fragment() {
         chipBattery.text = if (batteryGranted) "已开启" else "未开启"
         btnBattery.text = if (batteryGranted) "已开启" else "去设置"
 
+        refreshShizukuUi()
+
         val notificationsGranted = hasNotificationPermission(ctx)
         chipNotifications.text = if (notificationsGranted) "已授权" else "未授权"
         btnNotifications.text = if (notificationsGranted) "已授权" else "去授权"
@@ -99,6 +130,62 @@ class SettingsPermissionsFragment : Fragment() {
         val locationGranted = hasLocationPermission(ctx)
         chipLocation.text = if (locationGranted) "已授权" else "未授权"
         btnLocation.text = if (locationGranted) "已授权" else "去授权"
+    }
+
+    private fun refreshShizukuUi() {
+        val ctx = context ?: return
+        val running =
+            runCatching { Shizuku.pingBinder() }.getOrDefault(false)
+        if (!running) {
+            chipShizuku.text = "未启动"
+            btnShizukuRequest.isEnabled = false
+            return
+        }
+
+        val granted =
+            runCatching { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED }.getOrDefault(false)
+        chipShizuku.text = if (granted) "已授权" else "未授权"
+        btnShizukuRequest.isEnabled = !granted
+    }
+
+    private fun openShizukuAppOrSite() {
+        val ctx = context ?: return
+        val pkg = "moe.shizuku.privileged.api"
+        val intent = ctx.packageManager.getLaunchIntentForPackage(pkg)
+        if (intent != null) {
+            startActivity(intent)
+            return
+        }
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://shizuku.rikka.app/")))
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "无法打开 Shizuku：${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun requestShizukuPermission() {
+        val ctx = context ?: return
+        val running =
+            runCatching { Shizuku.pingBinder() }.getOrDefault(false)
+        if (!running) {
+            Toast.makeText(ctx, "请先启动 Shizuku 服务", Toast.LENGTH_SHORT).show()
+            openShizukuAppOrSite()
+            return
+        }
+
+        val granted =
+            runCatching { Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED }.getOrDefault(false)
+        if (granted) {
+            Toast.makeText(ctx, "Shizuku 权限已授权", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+
+        try {
+            Shizuku.requestPermission(REQ_SHIZUKU)
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "请求 Shizuku 权限失败：${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openAccessibilitySettings() {
@@ -253,6 +340,6 @@ class SettingsPermissionsFragment : Fragment() {
         private const val REQ_STORAGE = 1001
         private const val REQ_LOCATION = 1002
         private const val REQ_NOTIFICATIONS = 1003
+        private const val REQ_SHIZUKU = 2001
     }
 }
-
