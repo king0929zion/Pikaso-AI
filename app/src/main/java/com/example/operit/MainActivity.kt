@@ -9,7 +9,6 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.example.operit.logging.AppLog
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,8 +18,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        AppLog.init(applicationContext)
 
         drawerLayout = findViewById(R.id.drawerLayout)
 

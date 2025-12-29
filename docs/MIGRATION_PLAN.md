@@ -7,7 +7,7 @@
 ## 目标工程现状（UI 已有，逻辑逐步接入）
 - Chat：对话入口
 - Tools：工具箱入口（承接 Operit toolbox）
-- Settings：语言/AI/功能/提示词/权限
+- Settings：语言/AI/功能/提示词/权限（语言与功能开关已接入持久化）
 - Scripts：脚本库与编辑器
 - Logs / Help：日志与帮助
 

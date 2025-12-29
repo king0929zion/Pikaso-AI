@@ -73,6 +73,7 @@
                 </LinearLayout>
                     
                 <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchAutoScreenshotAnalysis"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"/>
@@ -110,6 +111,7 @@
                 </LinearLayout>
                     
                 <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchBackgroundRun"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"/>

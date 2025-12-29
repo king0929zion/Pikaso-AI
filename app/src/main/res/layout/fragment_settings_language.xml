@@ -47,6 +47,7 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/rowZh"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
@@ -61,6 +62,7 @@
                     android:textColor="@color/md_theme_light_onSurface"/>
                     
                 <ImageView
+                    android:id="@+id/iconZh"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_check"
@@ -73,6 +75,7 @@
                 android:background="@color/md_theme_light_surfaceVariant"/>
 
             <LinearLayout
+                android:id="@+id/rowEn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
@@ -85,6 +88,14 @@
                     android:text="English"
                     android:textSize="16sp"
                     android:textColor="@color/md_theme_light_onSurface"/>
+
+                <ImageView
+                    android:id="@+id/iconEn"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_check"
+                    android:visibility="gone"
+                    app:tint="@color/md_theme_light_primary"/>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
