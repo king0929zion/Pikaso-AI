@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.autoglm.AutoGlmOneClickFragment
+import com.example.operit.tools.ProcessLimitFragment
 import com.example.operit.virtualdisplay.VirtualScreenFragment
 
 class ToolsFragment : Fragment() {
@@ -26,6 +27,7 @@ class ToolsFragment : Fragment() {
                 "autoglm" -> AutoGLMFragment()
                 "config" -> AutoGlmOneClickFragment()
                 "virtual_screen" -> VirtualScreenFragment()
+                "process" -> ProcessLimitFragment()
                 else -> null
             }
             

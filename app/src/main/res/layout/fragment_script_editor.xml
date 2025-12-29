@@ -26,6 +26,7 @@
             app:tint="@color/md_theme_light_onBackground"/>
 
         <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -36,6 +37,7 @@
             android:textColor="@color/md_theme_light_onBackground"/>
 
         <Button
+            android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="保存"
@@ -44,20 +46,18 @@
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
     </LinearLayout>
 
-    <!-- Code Editor -->
-    <androidx.core.widget.NestedScrollView
+    <EditText
+        android:id="@+id/etContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#1e1e1e"
         android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="// 示例脚本: 12306.js\nimport { AutoGLM } from 'operit-core';\n\nasync function main() {\n    console.log(&quot;Starting 12306 task...&quot;);\n    await AutoGLM.launchApp(&quot;com.12306.mobile&quot;);\n    await AutoGLM.waitForText(&quot;查询车票&quot;);\n    // ...\n}"
-            android:textColor="#d4d4d4"
-            android:fontFamily="monospace"
-            android:textSize="14sp"/>
-    </androidx.core.widget.NestedScrollView>
+        android:fontFamily="monospace"
+        android:gravity="top|start"
+        android:hint="// 在这里编辑脚本内容"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:textColor="#d4d4d4"
+        android:textColorHint="#808080"
+        android:textSize="14sp" />
 
 </LinearLayout>

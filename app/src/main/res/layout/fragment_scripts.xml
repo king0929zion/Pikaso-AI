@@ -24,6 +24,7 @@
             android:textColor="@color/md_theme_light_onBackground"/>
 
         <Button
+            android:id="@+id/btnNewScript"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/btn_new"
