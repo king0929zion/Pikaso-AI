@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.ai.AiPreferences
 import com.example.operit.ai.AiSettings
 import com.example.operit.ai.OpenAiChatClient
+import com.example.operit.chat.ChatStore
 import com.example.operit.logging.AppLog
 import com.example.operit.prompts.PromptPreferences
 import com.example.operit.toolsystem.ChatToolRegistry
@@ -33,6 +34,8 @@ class ChatFragment : Fragment() {
     private val tools by lazy { ChatToolRegistry.defaultTools() }
 
     private val maxToolRounds = 4
+
+    private var sessionId: String? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_chat, container, false)
@@ -67,6 +70,62 @@ class ChatFragment : Fragment() {
                 input.text.clear()
             }
         }
+
+        ensureSessionLoaded()
+    }
+
+    private fun ensureSessionLoaded() {
+        if (sessionId != null) return
+
+        val ctx = context ?: return
+        val store = ChatStore.get(ctx)
+        val idFromArgs = arguments?.getString(ARG_SESSION_ID).orEmpty().trim()
+        val id =
+            if (idFromArgs.isNotBlank()) {
+                idFromArgs
+            } else {
+                store.createSession().id
+            }
+        sessionId = id
+
+        val saved = store.loadMessages(id)
+        if (saved.isNotEmpty()) {
+            conversation.clear()
+            conversation.addAll(saved)
+            renderConversation()
+            emptyState.visibility = View.GONE
+        }
+    }
+
+    private fun renderConversation() {
+        conversation.forEach { m ->
+            when (m.role) {
+                "user" -> adapter.addMessage(ChatAdapter.Message(m.content.orEmpty(), true))
+                "assistant" -> {
+                    val text =
+                        when {
+                            !m.content.isNullOrBlank() -> m.content
+                            !m.toolCalls.isNullOrEmpty() -> "（正在调用工具…）"
+                            else -> "（无内容）"
+                        }
+                    adapter.addMessage(ChatAdapter.Message(text ?: "", false))
+                }
+                // system/tool 不直接展示在对话列表里
+            }
+        }
+        recyclerView.scrollToPosition((adapter.itemCount - 1).coerceAtLeast(0))
+    }
+
+    private fun persistAsync() {
+        val ctx = context ?: return
+        val id = sessionId ?: return
+        val snapshot = conversation.toList()
+        Thread {
+            runCatching { ChatStore.get(ctx).saveMessages(id, snapshot) }
+            activity?.runOnUiThread {
+                (activity as? MainActivity)?.refreshHistory()
+            }
+        }.start()
     }
 
     private fun sendMessage(text: String) {
@@ -101,6 +160,7 @@ class ChatFragment : Fragment() {
             conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
         conversation.add(OpenAiChatClient.Message(role = "user", content = text))
+        persistAsync()
 
         isSending = true
         val placeholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
@@ -120,6 +180,7 @@ class ChatFragment : Fragment() {
             isSending = false
             adapter.updateMessage(placeholderPos, "已达到工具调用轮次上限，请把下一步需求说得更具体一些。")
             recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+            persistAsync()
             return
         }
 
@@ -135,8 +196,8 @@ class ChatFragment : Fragment() {
 
                         result.fold(
                             onSuccess = { r ->
-                                // 必须把 assistant 消息（含 tool_calls）加入对话，才能继续发送 tool 消息
                                 conversation.add(r.assistantMessage)
+                                persistAsync()
 
                                 val hasToolCalls = r.toolCalls.isNotEmpty()
                                 val contentToShow =
@@ -151,6 +212,7 @@ class ChatFragment : Fragment() {
                                 if (!hasToolCalls) {
                                     isSending = false
                                     AppLog.i("Chat", "request ok (no tools)")
+                                    persistAsync()
                                     return@fold
                                 }
 
@@ -183,6 +245,8 @@ class ChatFragment : Fragment() {
                                         if (!isAdded) return@runOnUiThread
 
                                         toolMessages.forEach { conversation.add(it) }
+                                        persistAsync()
+
                                         if (summary.isNotBlank()) {
                                             adapter.addMessage(ChatAdapter.Message(summary.toString().trimEnd(), false))
                                         }
@@ -202,6 +266,7 @@ class ChatFragment : Fragment() {
                                 adapter.updateMessage(placeholderPos, reply)
                                 recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                                 Toast.makeText(ctx, "AI 调用失败（可检查 API Key/Endpoint）", Toast.LENGTH_SHORT).show()
+                                persistAsync()
                             },
                         )
                     }
@@ -211,7 +276,12 @@ class ChatFragment : Fragment() {
 
     override fun onDestroyView() {
         inFlightCall?.cancel()
+        persistAsync()
         super.onDestroyView()
+    }
+
+    companion object {
+        const val ARG_SESSION_ID = "session_id"
     }
 }
 

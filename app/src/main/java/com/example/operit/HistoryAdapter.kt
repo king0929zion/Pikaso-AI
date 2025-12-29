@@ -5,20 +5,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.chat.ChatStore
 
-class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
+class HistoryAdapter(
+    private var items: List<ChatStore.SessionMeta>,
+    private val formatTime: (Long) -> String,
+    private val onClick: (ChatStore.SessionMeta) -> Unit,
+) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
-    data class HistoryItem(val date: String, val preview: String)
-
-    private val items = listOf(
-        HistoryItem("今天 10:23", "帮我打开 Bilibili 并搜索..."),
-        HistoryItem("昨天 15:45", "如何配置 AutoGLM 环境？"),
-        HistoryItem("12月27日", "测试无障碍服务权限")
-    )
+    fun submitList(newItems: List<ChatStore.SessionMeta>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history, parent, false)
-        return HistoryViewHolder(view)
+        return HistoryViewHolder(view, formatTime, onClick)
     }
 
     override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
@@ -27,13 +29,19 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
 
     override fun getItemCount() = items.size
 
-    class HistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class HistoryViewHolder(
+        itemView: View,
+        private val formatTime: (Long) -> String,
+        private val onClick: (ChatStore.SessionMeta) -> Unit,
+    ) : RecyclerView.ViewHolder(itemView) {
         private val tvDate: TextView = itemView.findViewById(R.id.tvDate)
         private val tvPreview: TextView = itemView.findViewById(R.id.tvPreview)
 
-        fun bind(item: HistoryItem) {
-            tvDate.text = item.date
+        fun bind(item: ChatStore.SessionMeta) {
+            tvDate.text = formatTime(item.updatedAt)
             tvPreview.text = item.preview
+            itemView.setOnClickListener { onClick(item) }
         }
     }
 }
+

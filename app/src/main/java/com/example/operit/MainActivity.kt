@@ -10,12 +10,17 @@ import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.example.operit.ai.AiPreferences
+import com.example.operit.chat.ChatStore
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var header: View
+    private lateinit var tvModelName: TextView
     private var currentFragmentTag: String? = null
+    private val chatStore by lazy { ChatStore.get(this) }
+    private lateinit var historyAdapter: HistoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         drawerLayout = findViewById(R.id.drawerLayout)
         header = findViewById(R.id.header)
+        tvModelName = findViewById(R.id.tvModelName)
 
         // Handle Back Press
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
@@ -45,8 +51,7 @@ class MainActivity : AppCompatActivity() {
             drawerLayout.openDrawer(GravityCompat.START)
         }
         findViewById<View>(R.id.btnHeaderAction).setOnClickListener {
-            loadFragment(ChatFragment(), "chat", true)
-            updateSidebarActiveState(R.id.navChat)
+            openNewChat()
         }
         findViewById<View>(R.id.modelSelector).setOnClickListener {
             loadFragment(SettingsAiFragment(), "settings_ai", true)
@@ -58,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         // Initial fragment
         if (savedInstanceState == null) {
-            loadFragment(ChatFragment(), "chat", false)
+            openNewChat(animate = false)
             updateSidebarActiveState(R.id.navChat)
         }
     }
@@ -85,16 +90,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.btnNewChat).setOnClickListener {
-            // Reset chat logic
-            loadFragment(ChatFragment(), "chat", true)
-            updateSidebarActiveState(R.id.navChat)
-            drawerLayout.closeDrawer(GravityCompat.START)
+            openNewChat()
         }
 
         // Setup History List
         val historyList = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.historyList)
         historyList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        historyList.adapter = HistoryAdapter()
+        historyAdapter =
+            HistoryAdapter(
+                items = chatStore.listSessions(),
+                formatTime = { ts -> chatStore.formatTime(ts) },
+                onClick = { meta ->
+                    openChat(meta.id)
+                },
+            )
+        historyList.adapter = historyAdapter
     }
 
     private fun updateSidebarActiveState(activeId: Int) {
@@ -115,7 +125,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFragment(fragment: Fragment, tag: String, animate: Boolean) {
-        val existingFragment = supportFragmentManager.findFragmentByTag(tag)
+        val existingFragment =
+            if (tag.startsWith("chat:")) {
+                null
+            } else {
+                supportFragmentManager.findFragmentByTag(tag)
+            }
 
         val transaction = supportFragmentManager.beginTransaction()
 
@@ -145,6 +160,34 @@ class MainActivity : AppCompatActivity() {
     private fun updateHeaderVisibility(fragment: Fragment) {
         // 设置页及其子页面不需要顶部“模型选择/新对话”栏
         val name = fragment.javaClass.simpleName
-        header.isVisible = !name.startsWith("Settings")
+        val show = !name.startsWith("Settings")
+        header.isVisible = show
+        if (show) updateHeaderModelName()
+    }
+
+    private fun updateHeaderModelName() {
+        val settings = AiPreferences.get(this).load()
+        val model = settings.model.trim()
+        tvModelName.text = if (model.isNotBlank()) model else "Model"
+    }
+
+    fun refreshHistory() {
+        if (!::historyAdapter.isInitialized) return
+        historyAdapter.submitList(chatStore.listSessions())
+    }
+
+    private fun openNewChat(animate: Boolean = true) {
+        val session = chatStore.createSession()
+        openChat(session.id, animate)
+    }
+
+    private fun openChat(sessionId: String, animate: Boolean = true) {
+        val fragment = ChatFragment().apply {
+            arguments = Bundle().apply { putString(ChatFragment.ARG_SESSION_ID, sessionId) }
+        }
+        loadFragment(fragment, "chat:$sessionId", animate)
+        updateSidebarActiveState(R.id.navChat)
+        drawerLayout.closeDrawer(GravityCompat.START)
+        refreshHistory()
     }
 }
