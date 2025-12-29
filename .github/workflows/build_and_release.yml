@@ -64,6 +64,14 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
+      - name: Upload Gradle Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log-${{ github.run_number }}
+          path: gradle-build.log
+          retention-days: 7
+
       - name: Report Build Failure (Gradle)
         if: steps.build_apk.outcome != 'success'
         run: |
