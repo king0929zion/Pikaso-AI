@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ScriptsAdapter : RecyclerView.Adapter<ScriptsAdapter.ScriptViewHolder>() {
+class ScriptsAdapter(private val onItemClick: (Script) -> Unit) : RecyclerView.Adapter<ScriptsAdapter.ScriptViewHolder>() {
 
     data class Script(val name: String, val desc: String, val size: String)
 
@@ -25,7 +25,7 @@ class ScriptsAdapter : RecyclerView.Adapter<ScriptsAdapter.ScriptViewHolder>() {
 
     override fun onBindViewHolder(holder: ScriptViewHolder, position: Int) {
         val script = scripts[position]
-        holder.bind(script)
+        holder.bind(script, onItemClick)
     }
 
     override fun getItemCount() = scripts.size
@@ -34,9 +34,10 @@ class ScriptsAdapter : RecyclerView.Adapter<ScriptsAdapter.ScriptViewHolder>() {
         private val tvName: TextView = itemView.findViewById(R.id.tvScriptName)
         private val tvDesc: TextView = itemView.findViewById(R.id.tvScriptDesc)
 
-        fun bind(script: Script) {
+        fun bind(script: Script, onClick: (Script) -> Unit) {
             tvName.text = script.name
             tvDesc.text = "${script.desc} • ${script.size}"
+            itemView.setOnClickListener { onClick(script) }
         }
     }
 }

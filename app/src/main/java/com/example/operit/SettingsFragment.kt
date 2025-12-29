@@ -28,9 +28,18 @@ class SettingsFragment : Fragment() {
         )
 
         recyclerView.adapter = SettingsAdapter(items) { item ->
-            if (item.id == "ai") {
+            val fragment = when (item.id) {
+                "language" -> SettingsLanguageFragment()
+                "ai" -> SettingsAiFragment()
+                "features" -> SettingsFeaturesFragment()
+                "prompts" -> SettingsPromptsFragment()
+                "permissions" -> SettingsPermissionsFragment()
+                else -> null
+            }
+
+            if (fragment != null) {
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, SettingsAiFragment())
+                    .replace(R.id.fragmentContainer, fragment)
                     .addToBackStack(null)
                     .commit()
             } else {

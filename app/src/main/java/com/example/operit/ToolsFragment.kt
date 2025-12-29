@@ -18,9 +18,15 @@ class ToolsFragment : Fragment() {
         recyclerView.layoutManager = GridLayoutManager(context, 2)
         
         recyclerView.adapter = ToolsAdapter { id ->
-            if (id == "web2apk") {
+            val fragment = when (id) {
+                "web2apk" -> Web2ApkFragment()
+                "autoglm" -> AutoGLMFragment()
+                else -> null
+            }
+            
+            if (fragment != null) {
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, Web2ApkFragment())
+                    .replace(R.id.fragmentContainer, fragment)
                     .addToBackStack(null)
                     .commit()
             }

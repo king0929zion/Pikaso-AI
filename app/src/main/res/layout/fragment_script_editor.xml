@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/md_theme_light_background"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_upward"
+            android:rotation="270"
+            android:background="@drawable/bg_tool_icon"
+            android:backgroundTint="@color/md_theme_light_surface"
+            app:tint="@color/md_theme_light_onBackground"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="编辑脚本"
+            android:textSize="22sp"
+            android:fontFamily="serif"
+            android:layout_marginStart="16dp"
+            android:textColor="@color/md_theme_light_onBackground"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="保存"
+            android:textColor="@color/md_theme_light_onPrimary"
+            android:backgroundTint="@color/md_theme_light_primary"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
+    </LinearLayout>
+
+    <!-- Code Editor -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#1e1e1e"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="// 示例脚本: 12306.js\nimport { AutoGLM } from 'operit-core';\n\nasync function main() {\n    console.log(&quot;Starting 12306 task...&quot;);\n    await AutoGLM.launchApp(&quot;com.12306.mobile&quot;);\n    await AutoGLM.waitForText(&quot;查询车票&quot;);\n    // ...\n}"
+            android:textColor="#d4d4d4"
+            android:fontFamily="monospace"
+            android:textSize="14sp"/>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

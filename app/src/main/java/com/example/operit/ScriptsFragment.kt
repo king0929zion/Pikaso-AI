@@ -16,6 +16,11 @@ class ScriptsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val list = view.findViewById<RecyclerView>(R.id.scriptsList)
         list.layoutManager = LinearLayoutManager(context)
-        list.adapter = ScriptsAdapter()
+        list.adapter = ScriptsAdapter {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, ScriptEditorFragment())
+                .addToBackStack(null)
+                .commit()
+        }
     }
 }
