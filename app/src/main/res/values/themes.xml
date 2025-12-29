@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Operit" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Pikaso" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Color definitions -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
@@ -18,16 +18,44 @@
         <item name="colorErrorContainer">@color/md_theme_light_errorContainer</item>
         <item name="colorOnError">@color/md_theme_light_onError</item>
         <item name="colorOnErrorContainer">@color/md_theme_light_onErrorContainer</item>
-        <item name="android:background">@color/md_theme_light_background</item>
+        <item name="android:colorBackground">@color/md_theme_light_background</item>
         <item name="colorSurface">@color/md_theme_light_surface</item>
         <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
         <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
         <item name="colorOutline">@color/md_theme_light_outline</item>
         <item name="colorOutlineVariant">@color/md_theme_light_outlineVariant</item>
-        
+
+        <!-- CardView styling - remove outline -->
+        <item name="cardElevation">0dp</item>
+        <item name="cardCornerRadius">16dp</item>
+
         <!-- Status Bar -->
         <item name="android:statusBarColor">@color/md_theme_light_background</item>
         <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Remove material component outlines -->
+        <item name="materialCardViewStyle">@style/Widget.Pikaso.CardView</item>
+        <item name="materialButtonStyle">@style/Widget.Pikaso.Button</item>
+    </style>
+
+    <!-- CardView without outline -->
+    <style name="Widget.Pikaso.CardView" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardElevation">0dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardBackgroundColor">@color/md_theme_light_surface</item>
+    </style>
+
+    <!-- Button without outline -->
+    <style name="Widget.Pikaso.Button" parent="Widget.Material3.Button">
+        <item name="cornerRadius">24dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- Pill button style -->
+    <style name="Widget.Pikaso.Button.Pill" parent="Widget.Material3.Button">
+        <item name="cornerRadius">999dp</item>
+        <item name="strokeWidth">0dp</item>
     </style>
 </resources>
