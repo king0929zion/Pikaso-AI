@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.autoglm.AutoGlmOneClickFragment
 
 class ToolsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -21,6 +23,7 @@ class ToolsFragment : Fragment() {
             val fragment = when (id) {
                 "web2apk" -> Web2ApkFragment()
                 "autoglm" -> AutoGLMFragment()
+                "config" -> AutoGlmOneClickFragment()
                 else -> null
             }
             
@@ -29,6 +32,8 @@ class ToolsFragment : Fragment() {
                     .replace(R.id.fragmentContainer, fragment)
                     .addToBackStack(null)
                     .commit()
+            } else {
+                Toast.makeText(requireContext(), "该模块尚未迁移：$id", Toast.LENGTH_SHORT).show()
             }
         }
     }

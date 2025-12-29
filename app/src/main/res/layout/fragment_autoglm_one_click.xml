@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/md_theme_light_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_tool_icon"
+                android:rotation="180"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/md_theme_light_onSurface" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:fontFamily="serif"
+                android:text="AutoGLM 一键配置"
+                android:textColor="@color/md_theme_light_onBackground"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/md_theme_light_surface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="step1 获取智谱 API Key"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="登录智谱平台创建并复制 API Key。"
+                    android:textColor="@color/md_theme_light_onSurfaceVariant"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenApiKeyPage"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="前往智谱 API Key 页面" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/md_theme_light_surface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="step2 写入 AutoGLM 配置（UI 控制器专用）"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="注意：这里写入的是 UI 控制器模型配置，不会替换你的对话主模型配置。"
+                    android:textColor="@color/md_theme_light_onSurfaceVariant"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/etApiKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_input_container"
+                    android:hint="在此粘贴智谱 API Key"
+                    android:inputType="textPassword"
+                    android:padding="12dp" />
+
+                <EditText
+                    android:id="@+id/etEndpoint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_input_container"
+                    android:hint="Endpoint（OpenAI 兼容）"
+                    android:inputType="textUri"
+                    android:padding="12dp"
+                    android:text="https://open.bigmodel.cn/api/paas/v4/chat/completions" />
+
+                <EditText
+                    android:id="@+id/etModel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_input_container"
+                    android:hint="模型名称"
+                    android:padding="12dp"
+                    android:text="autoglm-phone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConfigure"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="一键配置 AutoGLM" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/md_theme_light_onSurface"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
+
