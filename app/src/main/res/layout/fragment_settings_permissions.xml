@@ -46,8 +46,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Item 1 -->
             <LinearLayout
+                android:id="@+id/itemAccessibility"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
@@ -67,15 +67,27 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="用于模拟点击和滑动"
+                        android:text="用于后续手机自动化（点击/滑动/截图）"
                         android:textSize="13sp"
                         android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+
+                    <TextView
+                        android:id="@+id/tvAccessibilityStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未开启"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
                 </LinearLayout>
-                    
-                <com.google.android.material.switchmaterial.SwitchMaterial
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAccessibility"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"/>
+                    android:minHeight="36dp"
+                    android:text="去设置"/>
             </LinearLayout>
             
             <View
@@ -83,13 +95,254 @@
                 android:layout_height="1dp"
                 android:background="@color/md_theme_light_surfaceVariant"/>
 
-            <!-- Item 2 -->
             <LinearLayout
+                android:id="@+id/itemStorage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
                 android:gravity="center_vertical">
                 
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="存储权限"
+                        android:textSize="16sp"
+                        android:textColor="@color/md_theme_light_onSurface"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="用于读取/保存文件、导入导出与脚本资源"
+                        android:textSize="13sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+
+                    <TextView
+                        android:id="@+id/tvStorageStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未授权"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStorage"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="36dp"
+                    android:text="去授权"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/md_theme_light_surfaceVariant"/>
+
+            <LinearLayout
+                android:id="@+id/itemOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="悬浮窗权限"
+                        android:textSize="16sp"
+                        android:textColor="@color/md_theme_light_onSurface"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="用于在其他应用上层展示控制面板"
+                        android:textSize="13sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    <TextView
+                        android:id="@+id/tvOverlayStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未授权"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOverlay"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="36dp"
+                    android:text="去设置"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/md_theme_light_surfaceVariant"/>
+
+            <LinearLayout
+                android:id="@+id/itemBattery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="电池优化豁免"
+                        android:textSize="16sp"
+                        android:textColor="@color/md_theme_light_onSurface"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="避免后台被系统限制，影响自动化/下载/通知"
+                        android:textSize="13sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    <TextView
+                        android:id="@+id/tvBatteryStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未开启"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBattery"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="36dp"
+                    android:text="去设置"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/md_theme_light_surfaceVariant"/>
+
+            <LinearLayout
+                android:id="@+id/itemLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="位置权限"
+                        android:textSize="16sp"
+                        android:textColor="@color/md_theme_light_onSurface"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="用于部分系统能力（如 Wi‑Fi 相关查询等）"
+                        android:textSize="13sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    <TextView
+                        android:id="@+id/tvLocationStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未授权"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocation"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="36dp"
+                    android:text="去授权"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/md_theme_light_surfaceVariant"/>
+
+            <LinearLayout
+                android:id="@+id/itemNotifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="通知权限"
+                        android:textSize="16sp"
+                        android:textColor="@color/md_theme_light_onSurface"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="用于任务执行状态、下载与系统提示"
+                        android:textSize="13sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    <TextView
+                        android:id="@+id/tvNotificationsStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未授权"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNotifications"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="36dp"
+                    android:text="去授权"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/md_theme_light_surfaceVariant"/>
+
+            <LinearLayout
+                android:id="@+id/itemShizuku"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -104,15 +357,26 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="用于高级系统操作"
+                        android:text="用于高级系统操作（后续迁移）"
                         android:textSize="13sp"
                         android:textColor="@color/md_theme_light_onSurfaceVariant"/>
+                    <TextView
+                        android:id="@+id/tvShizukuStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="未集成"
+                        android:textSize="12sp"
+                        android:textColor="@color/md_theme_light_onSurfaceVariant"/>
                 </LinearLayout>
-                    
-                <com.google.android.material.switchmaterial.SwitchMaterial
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShizuku"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"/>
+                    android:minHeight="36dp"
+                    android:text="了解"/>
             </LinearLayout>
 
         </LinearLayout>
