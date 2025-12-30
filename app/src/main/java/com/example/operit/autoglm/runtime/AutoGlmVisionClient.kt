@@ -37,12 +37,12 @@ class AutoGlmVisionClient(
                             .put(
                                 "content",
                                 JSONArray()
-                                    .put(JSONObject().put("type", "text").put("text", userText))
                                     .put(
                                         JSONObject()
                                             .put("type", "image_url")
                                             .put("image_url", JSONObject().put("url", imageDataUrl)),
                                     ),
+                                    .put(JSONObject().put("type", "text").put("text", userText)),
                             ),
                     )
 
@@ -89,4 +89,3 @@ class AutoGlmVisionClient(
         }
     }
 }
-

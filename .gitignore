@@ -16,3 +16,4 @@ app/release.keystore.b64
 run_*_logs.zip
 artifact_*.zip
 .ci_artifacts/
+.ci_tmp/

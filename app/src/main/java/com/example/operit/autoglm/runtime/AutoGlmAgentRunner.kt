@@ -16,6 +16,7 @@ class AutoGlmAgentRunner(
     private val settings: AiSettings,
     private val serviceProvider: () -> com.example.operit.accessibility.OperitAccessibilityService?,
     private val onLog: (String) -> Unit,
+    private val onScreenshot: ((String) -> Unit)? = null,
 ) {
     @Volatile
     var cancelled: Boolean = false
@@ -42,8 +43,14 @@ class AutoGlmAgentRunner(
                 onLog("--------------------------------------------------")
                 onLog("Step $step/$maxSteps：截图 -> 规划 -> 执行")
 
-                val capture = ShizukuScreencap.capture().getOrElse { e ->
+                val capture = ShizukuScreencap.capture(context).getOrElse { e ->
                     throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
+                }
+                onScreenshot?.invoke(capture.pngFile.absolutePath)
+                capture.width?.let { w ->
+                    capture.height?.let { h ->
+                        onLog("截图：${w}x$h，${capture.pngBytes.size} bytes")
+                    }
                 }
 
                 val userText = buildUserText(task = task, step = step, maxSteps = maxSteps, lastExecSummary = lastExecSummary)

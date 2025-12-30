@@ -155,8 +155,9 @@ class AutoGlmActionExecutor(
 
     private fun toAbsPoint(relX: Int, relY: Int): Pair<Float, Float> {
         val dm = context.resources.displayMetrics
-        val x = (relX.coerceIn(0, 999) / 999f) * dm.widthPixels
-        val y = (relY.coerceIn(0, 999) / 999f) * dm.heightPixels
+        // AutoGLM 坐标通常按 0~1000 归一化（和 Operit 保持一致）
+        val x = (relX.coerceIn(0, 1000) / 1000f) * dm.widthPixels
+        val y = (relY.coerceIn(0, 1000) / 1000f) * dm.heightPixels
         return x to y
     }
 
@@ -167,4 +168,3 @@ class AutoGlmActionExecutor(
         return num.toDoubleOrNull()
     }
 }
-

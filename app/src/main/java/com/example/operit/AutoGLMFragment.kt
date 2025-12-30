@@ -1,10 +1,12 @@
 package com.example.operit
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -23,6 +25,7 @@ import rikka.shizuku.Shizuku
 class AutoGLMFragment : Fragment() {
     private var isExecuting = false
     private var runner: AutoGlmAgentRunner? = null
+    private var ivPreview: ImageView? = null
 
     private val logBuilder = StringBuilder()
 
@@ -49,6 +52,7 @@ class AutoGLMFragment : Fragment() {
         val btnExecute = view.findViewById<MaterialButton>(R.id.btnExecute)
         val tvLog = view.findViewById<TextView>(R.id.tvLog)
         val scrollLog = view.findViewById<ScrollView>(R.id.scrollLog)
+        ivPreview = view.findViewById(R.id.ivPreview)
 
         btnExecute.setOnClickListener {
             if (isExecuting) {
@@ -132,6 +136,11 @@ class AutoGLMFragment : Fragment() {
                         onLogChanged()
                     }
                 },
+                onScreenshot = { path ->
+                    activity?.runOnUiThread {
+                        updatePreview(path)
+                    }
+                },
             )
 
         Thread {
@@ -164,8 +173,32 @@ class AutoGLMFragment : Fragment() {
         isExecuting = false
     }
 
+    private fun updatePreview(path: String) {
+        val iv = ivPreview ?: return
+        val filePath = path.trim()
+        if (filePath.isBlank()) return
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(filePath, bounds)
+        val width = bounds.outWidth.coerceAtLeast(1)
+        val height = bounds.outHeight.coerceAtLeast(1)
+
+        val reqW = iv.width.takeIf { it > 0 } ?: 1080
+        val reqH = iv.height.takeIf { it > 0 } ?: 1920
+
+        var sample = 1
+        while (width / sample > reqW * 2 || height / sample > reqH * 2) {
+            sample *= 2
+        }
+
+        val opts = BitmapFactory.Options().apply { inSampleSize = sample.coerceAtLeast(1) }
+        val bmp = BitmapFactory.decodeFile(filePath, opts) ?: return
+        iv.setImageBitmap(bmp)
+    }
+
     override fun onDestroyView() {
         runner?.cancel("页面销毁")
+        ivPreview = null
         super.onDestroyView()
     }
 }

@@ -37,7 +37,7 @@ class ChatFragment : Fragment() {
     private val conversation = mutableListOf<OpenAiChatClient.Message>()
     private val tools by lazy { ChatToolRegistry.defaultTools() }
 
-    private val maxToolRounds = 4
+    private val maxToolRounds = 8
 
     private var sessionId: String? = null
 
@@ -207,6 +207,7 @@ class ChatFragment : Fragment() {
                     "\n\n你也可以调用 AutoGLM 工具来执行跨应用的手机自动化任务：" +
                     "先调用 autoglm_run(task=...) 获得 session_id，再用 autoglm_status(session_id=...) 获取进度/日志。" +
                     "如需停止则调用 autoglm_cancel(session_id=...)。" +
+                    "\n重要：只有在 tool_calls 真实调用并返回结果后，才可以声称“已执行/已启动/已检查状态”。如果未调用工具，必须明确说明未发生任何实际操作。" +
                     "涉及支付/隐私/删除等敏感步骤前必须先向用户二次确认。"
             conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
@@ -253,12 +254,20 @@ class ChatFragment : Fragment() {
                                 persistAsync()
 
                                 val hasToolCalls = r.toolCalls.isNotEmpty()
-                                val contentToShow =
+                                var contentToShow =
                                     when {
                                         r.content.isNotBlank() -> r.content
                                         hasToolCalls -> "正在调用工具..."
                                         else -> "（无内容）"
                                     }
+                                if (!hasToolCalls && contentToShow.isNotBlank()) {
+                                    val suspicious =
+                                        Regex("""(?i)autoglm|session_id|tool|工具|已启动|启动了|正在执行|检查.*状态|已执行""")
+                                            .containsMatchIn(contentToShow)
+                                    if (suspicious) {
+                                        contentToShow += "\n\n（提示：未检测到 tool_calls，本次回复不会触发任何实际操作。）"
+                                    }
+                                }
                                 adapter.updateMessage(placeholderPos, contentToShow)
                                 recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 

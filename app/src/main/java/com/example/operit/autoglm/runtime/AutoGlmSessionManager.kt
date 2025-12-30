@@ -105,6 +105,8 @@ object AutoGlmSessionManager {
             .put("session_id", id)
             .put("status", session.status.name)
             .put("startedAt", session.startedAt)
+            .put("recommended_poll_ms", 1200)
+            .put("hint", "请循环调用 autoglm_status(session_id=...) 直到 status != RUNNING")
     }
 
     fun status(sessionId: String, maxChars: Int = 8000): JSONObject {
