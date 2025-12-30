@@ -10,14 +10,69 @@ class AiPreferences private constructor(private val context: Context) {
     }
 
     fun load(profile: String): AiSettings {
-        val provider = AiProvider.entries.firstOrNull { it.name == sp.getString(key(profile, KEY_PROVIDER), null) }
-            ?: AiProvider.ZHIPU
-        val endpoint = sp.getString(key(profile, KEY_ENDPOINT), null) ?: provider.defaultEndpoint
-        val apiKey = sp.getString(key(profile, KEY_API_KEY), null) ?: ""
-        val model = sp.getString(key(profile, KEY_MODEL), null) ?: provider.defaultModel
-        val temperature = sp.getFloat(key(profile, KEY_TEMPERATURE), 0.7f)
-        val topP = sp.getFloat(key(profile, KEY_TOP_P), 1.0f)
-        val maxTokens = sp.getInt(key(profile, KEY_MAX_TOKENS), 4096)
+        val providerKey = key(profile, KEY_PROVIDER)
+        val endpointKey = key(profile, KEY_ENDPOINT)
+        val apiKeyKey = key(profile, KEY_API_KEY)
+        val modelKey = key(profile, KEY_MODEL)
+        val tempKey = key(profile, KEY_TEMPERATURE)
+        val topPKey = key(profile, KEY_TOP_P)
+        val maxTokensKey = key(profile, KEY_MAX_TOKENS)
+
+        val providerName = sp.getString(providerKey, null)
+        val provider =
+            AiProvider.entries.firstOrNull { it.name == providerName }
+                ?: if (profile == PROFILE_UI_CONTROLLER) AiProvider.ZHIPU else AiProvider.ZHIPU
+
+        val defaultModel =
+            if (profile == PROFILE_UI_CONTROLLER) {
+                DEFAULT_UI_CONTROLLER_MODEL
+            } else {
+                provider.defaultModel
+            }
+        val defaultEndpoint = provider.defaultEndpoint
+
+        val endpoint =
+            if (sp.contains(endpointKey)) {
+                sp.getString(endpointKey, null).orEmpty().trim().ifBlank { defaultEndpoint }
+            } else {
+                defaultEndpoint
+            }
+
+        val apiKey = sp.getString(apiKeyKey, null) ?: ""
+
+        val model =
+            if (sp.contains(modelKey)) {
+                sp.getString(modelKey, null).orEmpty().trim().ifBlank { defaultModel }
+            } else {
+                defaultModel
+            }
+
+        val temperature =
+            if (sp.contains(tempKey)) {
+                sp.getFloat(tempKey, 0.7f)
+            } else if (profile == PROFILE_UI_CONTROLLER) {
+                DEFAULT_UI_CONTROLLER_TEMPERATURE
+            } else {
+                0.7f
+            }
+
+        val topP =
+            if (sp.contains(topPKey)) {
+                sp.getFloat(topPKey, 1.0f)
+            } else if (profile == PROFILE_UI_CONTROLLER) {
+                DEFAULT_UI_CONTROLLER_TOP_P
+            } else {
+                1.0f
+            }
+
+        val maxTokens =
+            if (sp.contains(maxTokensKey)) {
+                sp.getInt(maxTokensKey, 4096)
+            } else if (profile == PROFILE_UI_CONTROLLER) {
+                DEFAULT_UI_CONTROLLER_MAX_TOKENS
+            } else {
+                4096
+            }
 
         return AiSettings(
             provider = provider,
@@ -62,6 +117,11 @@ class AiPreferences private constructor(private val context: Context) {
 
         const val PROFILE_CHAT = "chat"
         const val PROFILE_UI_CONTROLLER = "ui_controller"
+
+        private const val DEFAULT_UI_CONTROLLER_MODEL = "autoglm-phone"
+        private const val DEFAULT_UI_CONTROLLER_TEMPERATURE = 0.0f
+        private const val DEFAULT_UI_CONTROLLER_TOP_P = 0.8f
+        private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 4096
 
         fun get(context: Context): AiPreferences = AiPreferences(context.applicationContext)
     }
