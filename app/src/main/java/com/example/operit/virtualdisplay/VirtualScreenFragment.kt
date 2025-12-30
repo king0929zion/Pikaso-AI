@@ -2,6 +2,7 @@ package com.example.operit.virtualdisplay
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +10,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.ai.assistance.showerclient.ShowerBinderRegistry
+import com.ai.assistance.showerclient.ShowerController
 import com.example.operit.R
+import com.example.operit.SettingsPermissionsFragment
 import com.example.operit.shizuku.ShizukuScreencap
+import com.example.operit.virtualdisplay.shower.ShowerVirtualScreenOverlay
 import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.text.SimpleDateFormat
@@ -25,12 +30,14 @@ class VirtualScreenFragment : Fragment() {
     private lateinit var tvLastCapture: TextView
     private lateinit var tvRealStatus: TextView
     private lateinit var tvRealLastCapture: TextView
+    private lateinit var tvShowerStatus: TextView
     private lateinit var ivPreview: ImageView
     private lateinit var btnCreate: MaterialButton
     private lateinit var btnRelease: MaterialButton
     private lateinit var btnCapture: MaterialButton
     private lateinit var btnRealCapture: MaterialButton
     private lateinit var btnRealAuto: MaterialButton
+    private lateinit var btnShowerOverlay: MaterialButton
 
     @Volatile private var autoRunning: Boolean = false
     @Volatile private var autoThread: Thread? = null
@@ -46,12 +53,14 @@ class VirtualScreenFragment : Fragment() {
         tvLastCapture = view.findViewById(R.id.tvLastCapture)
         tvRealStatus = view.findViewById(R.id.tvRealStatus)
         tvRealLastCapture = view.findViewById(R.id.tvRealLastCapture)
+        tvShowerStatus = view.findViewById(R.id.tvShowerStatus)
         ivPreview = view.findViewById(R.id.ivPreview)
         btnCreate = view.findViewById(R.id.btnCreate)
         btnRelease = view.findViewById(R.id.btnRelease)
         btnCapture = view.findViewById(R.id.btnCapture)
         btnRealCapture = view.findViewById(R.id.btnRealCapture)
         btnRealAuto = view.findViewById(R.id.btnRealAuto)
+        btnShowerOverlay = view.findViewById(R.id.btnShowerOverlay)
 
         btnCreate.setOnClickListener {
             val id = manager.ensureVirtualDisplay()
@@ -73,9 +82,8 @@ class VirtualScreenFragment : Fragment() {
 
         btnCapture.setOnClickListener { captureVirtualFrameAsync() }
         btnRealCapture.setOnClickListener { captureRealScreenOnceAsync() }
-        btnRealAuto.setOnClickListener {
-            if (autoRunning) stopAutoPreview() else startAutoPreview()
-        }
+        btnRealAuto.setOnClickListener { if (autoRunning) stopAutoPreview() else startAutoPreview() }
+        btnShowerOverlay.setOnClickListener { toggleShowerOverlay() }
 
         refreshUi()
     }
@@ -97,11 +105,29 @@ class VirtualScreenFragment : Fragment() {
             if (ShizukuScreencap.isReady()) {
                 "已就绪：可直接截图显示真实屏幕（Shizuku）"
             } else {
-                "未就绪：请在“权限配置”中授予 Shizuku（用于截图）"
+                "未就绪：请在“权限配置”中授予 Shizuku 权限（用于截图）"
             }
+        btnRealCapture.isEnabled = ShizukuScreencap.isReady()
 
-        btnRealCapture.isEnabled = true
-        btnRealAuto.text = if (autoRunning) "停止预览" else "实时预览"
+        btnRealAuto.text = if (autoRunning) "停止自动预览" else "开始自动预览"
+
+        val overlayGranted = Settings.canDrawOverlays(requireContext())
+        val shizukuReady = ShizukuScreencap.isReady()
+        val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
+        val showerId = runCatching { ShowerController.getDisplayId() }.getOrNull()
+        val showing = ShowerVirtualScreenOverlay.isShowing()
+
+        tvShowerStatus.text =
+            buildString {
+                appendLine("Shower 虚拟屏幕：")
+                appendLine("悬浮窗权限：${if (overlayGranted) "已开启" else "未开启"}")
+                appendLine("Shizuku：${if (shizukuReady) "已授权" else "未授权"}")
+                appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
+                appendLine("DisplayId：${showerId ?: "未创建"}")
+                appendLine("悬浮窗：${if (showing) "显示中" else "未显示"}")
+            }.trimEnd()
+
+        btnShowerOverlay.text = if (showing) "关闭悬浮窗" else "启动悬浮窗"
     }
 
     private fun captureVirtualFrameAsync() {
@@ -117,7 +143,7 @@ class VirtualScreenFragment : Fragment() {
 
         val file = File(ctx.cacheDir, "virtual_display_latest.png")
         btnCapture.isEnabled = false
-        tvLastCapture.text = "正在截图..."
+        tvLastCapture.text = "正在截图…"
 
         Thread {
             val ok = manager.captureLatestFrameToFile(file)
@@ -146,7 +172,7 @@ class VirtualScreenFragment : Fragment() {
         }
 
         btnRealCapture.isEnabled = false
-        tvRealLastCapture.text = "正在截图..."
+        tvRealLastCapture.text = "正在截图…"
 
         Thread {
             val result =
@@ -219,6 +245,29 @@ class VirtualScreenFragment : Fragment() {
         if (this::btnRealAuto.isInitialized) {
             activity?.runOnUiThread { refreshUi() }
         }
+    }
+
+    private fun toggleShowerOverlay() {
+        val ctx = context ?: return
+        val overlayGranted = Settings.canDrawOverlays(ctx)
+        val shizukuReady = ShizukuScreencap.isReady()
+        if (!overlayGranted || !shizukuReady) {
+            Toast.makeText(ctx, "请先授予悬浮窗权限与 Shizuku 权限", Toast.LENGTH_SHORT).show()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, SettingsPermissionsFragment())
+                .addToBackStack(null)
+                .commit()
+            return
+        }
+
+        if (ShowerVirtualScreenOverlay.isShowing()) {
+            ShowerVirtualScreenOverlay.hide()
+            refreshUi()
+            return
+        }
+
+        ShowerVirtualScreenOverlay.show(ctx)
+        refreshUi()
     }
 
     private fun showPresentationIfPossible() {

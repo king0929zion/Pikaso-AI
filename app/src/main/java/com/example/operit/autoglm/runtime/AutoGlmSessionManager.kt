@@ -1,16 +1,17 @@
 package com.example.operit.autoglm.runtime
 
 import android.content.Context
+import android.provider.Settings
 import com.example.operit.accessibility.AccessibilityStatus
 import com.example.operit.ai.AiPreferences
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
+import com.example.operit.virtualdisplay.shower.ShowerVirtualScreenOverlay
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
 
 object AutoGlmSessionManager {
-
     enum class Status {
         RUNNING,
         SUCCESS,
@@ -45,28 +46,41 @@ object AutoGlmSessionManager {
         }
 
         val settings = AiPreferences.get(ctx).load(AiPreferences.PROFILE_UI_CONTROLLER)
-        if (settings.endpoint.isBlank() || settings.model.isBlank()) {
-            return JSONObject().put("ok", false).put("error", "未配置 UI 控制器模型（设置->AI 配置->AutoGLM）")
+        if (settings.endpoint.isBlank() || settings.model.isBlank() || settings.apiKey.isBlank()) {
+            return JSONObject().put("ok", false).put("error", "未配置 AutoGLM（设置 -> AI 配置 -> AutoGLM）")
         }
 
         val id = UUID.randomUUID().toString()
         val sb = StringBuilder(8 * 1024)
+
+        fun appendLog(line: String) {
+            synchronized(sb) {
+                sb.appendLine(line)
+                val max = 60_000
+                if (sb.length > max) {
+                    sb.delete(0, sb.length - max)
+                }
+            }
+        }
+
+        // 尝试拉起虚拟屏幕悬浮窗（不作为硬性依赖）
+        if (Settings.canDrawOverlays(ctx)) {
+            runCatching { ShowerVirtualScreenOverlay.show(ctx) }
+                .onSuccess { appendLog("已启动虚拟屏幕悬浮窗（Shower）") }
+                .onFailure { e ->
+                    AppLog.w("AutoGLM", "failed to show shower overlay: ${e.message}")
+                    appendLog("虚拟屏幕悬浮窗启动失败：${e.message ?: e.javaClass.simpleName}")
+                }
+        } else {
+            appendLog("未授予悬浮窗权限：无法显示虚拟屏幕预览（可在 权限配置 中开启）")
+        }
 
         val runner =
             AutoGlmAgentRunner(
                 context = ctx,
                 settings = settings,
                 serviceProvider = { com.example.operit.accessibility.OperitAccessibilityService.instance },
-                onLog = { line ->
-                    synchronized(sb) {
-                        sb.appendLine(line)
-                        // 控制内存：最多保留 60k 字符
-                        val max = 60_000
-                        if (sb.length > max) {
-                            sb.delete(0, sb.length - max)
-                        }
-                    }
-                },
+                onLog = ::appendLog,
             )
 
         val session =
@@ -87,16 +101,16 @@ object AutoGlmSessionManager {
             val result = runner.run(task = task, maxSteps = session.maxSteps)
             val now = System.currentTimeMillis()
             session.endedAt = now
-            if (runner.cancelled) {
-                session.status = Status.CANCELLED
-            } else {
-                session.status = if (result.isSuccess) Status.SUCCESS else Status.FAILED
-            }
+            session.status =
+                when {
+                    runner.cancelled -> Status.CANCELLED
+                    result.isSuccess -> Status.SUCCESS
+                    else -> Status.FAILED
+                }
+
             result.exceptionOrNull()?.let { e ->
                 AppLog.e("AutoGLM", "session failed id=$id", e)
-                synchronized(sb) {
-                    sb.appendLine("失败：${e.message ?: e.javaClass.simpleName}")
-                }
+                appendLog("失败：${e.message ?: e.javaClass.simpleName}")
             }
         }.start()
 

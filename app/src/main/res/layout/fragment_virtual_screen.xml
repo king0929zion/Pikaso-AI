@@ -65,7 +65,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="提示：需要在“权限配置”中授权 Shizuku。"
+                    android:text="提示：需要在“权限配置”中授予 Shizuku。"
                     android:textColor="@color/md_theme_light_onSurfaceVariant"
                     android:textSize="12sp" />
 
@@ -114,7 +114,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="说明：该虚拟屏幕是一个独立显示（VirtualDisplay），可用于后续自动化/截图链路（实验）。"
+                    android:text="说明：下方是实验性的 VirtualDisplay 截图链路。"
                     android:textColor="@color/md_theme_light_onSurfaceVariant"
                     android:textSize="12sp" />
 
@@ -147,7 +147,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="截图预览" />
+                    android:text="虚拟屏幕截图" />
 
                 <TextView
                     android:id="@+id/tvLastCapture"
@@ -156,6 +156,32 @@
                     android:layout_marginTop="10dp"
                     android:textColor="@color/md_theme_light_onSurfaceVariant"
                     android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="虚拟屏幕悬浮窗（Operit 模式）"
+                    android:textColor="@color/md_theme_light_onSurface"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvShowerStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="需要：悬浮窗权限 + Shizuku（shell） + 存储权限（复制 server.jar）。"
+                    android:textColor="@color/md_theme_light_onSurfaceVariant"
+                    android:textSize="12sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShowerOverlay"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="启动悬浮窗" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -178,3 +204,4 @@
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
+

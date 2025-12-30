@@ -47,9 +47,11 @@ class AutoGlmConnectionTestFragment : Fragment() {
 
             val apiKeyMasked =
                 settings.apiKey.trim().let {
-                    if (it.isBlank()) "未填写"
-                    else if (it.length <= 10) "已填写（长度=${it.length}）"
-                    else "${it.take(6)}…${it.takeLast(4)}（长度=${it.length}）"
+                    when {
+                        it.isBlank() -> "未填写"
+                        it.length <= 10 -> "已填写（长度=${it.length}）"
+                        else -> "${it.take(6)}…${it.takeLast(4)}（长度=${it.length}）"
+                    }
                 }
 
             val a11y = if (AccessibilityStatus.isServiceEnabled(ctx)) "已开启" else "未开启"
@@ -92,8 +94,8 @@ class AutoGlmConnectionTestFragment : Fragment() {
 
             isTesting = true
             btnTest.isEnabled = false
-            btnTest.text = "测试中..."
-            appendLog("开始测试：将截图并调用 autoglm-phone（SSE）")
+            btnTest.text = "测试中…"
+            appendLog("开始测试：截图并调用 autoglm-phone（SSE/非 SSE 自动回退）")
             renderLog(tvLog, scrollLog)
 
             Thread {
@@ -148,7 +150,7 @@ class AutoGlmConnectionTestFragment : Fragment() {
 
         if (logBuilder.isEmpty()) {
             appendLog("提示：此页面用于测试 AutoGLM（UI 控制模型）是否可连通。")
-            appendLog("会使用 Shizuku 截图，并调用 endpoint 的 chat/completions。")
+            appendLog("会使用 Shizuku 截图，并调用 endpoint 的 chat/completions 接口。")
         }
 
         refreshStatus()

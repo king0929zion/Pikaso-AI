@@ -16,7 +16,7 @@ enum class AiProvider(
         defaultModel = "deepseek-chat",
     ),
     ZHIPU(
-        displayName = "智谱（OpenAI 兼容）",
+        displayName = "智谱（BigModel OpenAI 兼容）",
         defaultEndpoint = "https://open.bigmodel.cn/api/paas/v4/chat/completions",
         defaultModel = "glm-4-flash",
     ),

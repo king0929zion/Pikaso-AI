@@ -1,24 +1,31 @@
 package com.example.operit.toolsystem
 
 import android.content.Context
-import com.example.operit.ai.OpenAiChatClient
+import android.provider.Settings
+import com.ai.assistance.showerclient.ShowerBinderRegistry
+import com.ai.assistance.showerclient.ShowerController
+import com.ai.assistance.showerclient.ShowerEnvironment
 import com.example.operit.autoglm.runtime.AutoGlmSessionManager
 import com.example.operit.logging.AppLog
 import com.example.operit.scripts.ScriptStore
+import com.example.operit.shizuku.ShizukuScreencap
 import com.example.operit.virtualdisplay.VirtualDisplayManager
+import com.example.operit.virtualdisplay.shower.ShowerVirtualScreenOverlay
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 
 object ChatToolRegistry {
-    fun defaultTools(): List<OpenAiChatClient.ToolDefinition> {
+    fun defaultTools(): List<com.example.operit.ai.OpenAiChatClient.ToolDefinition> {
         return listOf(
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "scripts_list",
                 description = "列出本地脚本库中的脚本（id/name/desc/updatedAt/sizeBytes）。",
                 parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "scripts_read",
                 description = "读取脚本内容。",
                 parameters =
@@ -28,7 +35,7 @@ object ChatToolRegistry {
                         .put("required", JSONArray().put("id"))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "scripts_write",
                 description = "写入脚本内容（会覆盖原内容）。",
                 parameters =
@@ -43,7 +50,7 @@ object ChatToolRegistry {
                         .put("required", JSONArray().put("id").put("content"))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "scripts_create",
                 description = "新建脚本（可选指定 name/desc/content）。",
                 parameters =
@@ -58,46 +65,64 @@ object ChatToolRegistry {
                         )
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "logs_read",
                 description = "读取应用日志（可指定最大字符数，默认 8000）。",
                 parameters =
                     JSONObject()
                         .put("type", "object")
-                        .put(
-                            "properties",
-                            JSONObject().put("max_chars", JSONObject().put("type", "integer").put("description", "最大字符数")),
-                        )
+                        .put("properties", JSONObject().put("max_chars", JSONObject().put("type", "integer").put("description", "最大字符数")))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "logs_clear",
                 description = "清空应用日志（不可恢复）。",
                 parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "virtual_screen_create",
                 description = "创建/确保虚拟屏幕（VirtualDisplay）并返回 displayId。",
                 parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "virtual_screen_release",
                 description = "释放虚拟屏幕（VirtualDisplay）。",
                 parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "virtual_screen_capture",
-                description = "截取虚拟屏幕最新帧并保存为 PNG，返回文件路径。",
+                description = "截取虚拟屏幕最新一帧到文件（可指定 path，默认写入 cache）。",
                 parameters =
                     JSONObject()
                         .put("type", "object")
-                        .put(
-                            "properties",
-                            JSONObject().put("path", JSONObject().put("type", "string").put("description", "保存路径（可选）")),
-                        )
+                        .put("properties", JSONObject().put("path", JSONObject().put("type", "string").put("description", "输出路径（可选）")))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
+                name = "shower_overlay_show",
+                description = "显示虚拟屏幕悬浮窗（Shower）。需要：悬浮窗权限 + Shizuku。",
+                parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
+            ),
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
+                name = "shower_overlay_hide",
+                description = "关闭虚拟屏幕悬浮窗（Shower）。",
+                parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
+            ),
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
+                name = "shower_status",
+                description = "获取 Shower 虚拟屏幕状态（权限、binder、displayId、悬浮窗状态）。",
+                parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
+            ),
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
+                name = "shower_log_read",
+                description = "读取 shower server 日志（/data/local/tmp/shower.log，需要 Shizuku）。",
+                parameters =
+                    JSONObject()
+                        .put("type", "object")
+                        .put("properties", JSONObject().put("max_chars", JSONObject().put("type", "integer").put("description", "最大字符数（默认 8000）")))
+                        .put("additionalProperties", false),
+            ),
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "autoglm_run",
                 description = "启动 AutoGLM（autoglm-phone）执行手机自动化任务。需要无障碍与 Shizuku。返回 session_id，用 autoglm_status 查询进度。",
                 parameters =
@@ -112,7 +137,7 @@ object ChatToolRegistry {
                         .put("required", JSONArray().put("task"))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "autoglm_status",
                 description = "查询 AutoGLM session 状态与日志片段。",
                 parameters =
@@ -127,16 +152,13 @@ object ChatToolRegistry {
                         .put("required", JSONArray().put("session_id"))
                         .put("additionalProperties", false),
             ),
-            OpenAiChatClient.ToolDefinition(
+            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "autoglm_cancel",
                 description = "取消 AutoGLM session。",
                 parameters =
                     JSONObject()
                         .put("type", "object")
-                        .put(
-                            "properties",
-                            JSONObject().put("session_id", JSONObject().put("type", "string").put("description", "session_id")),
-                        )
+                        .put("properties", JSONObject().put("session_id", JSONObject().put("type", "string").put("description", "session_id")))
                         .put("required", JSONArray().put("session_id"))
                         .put("additionalProperties", false),
             ),
@@ -157,6 +179,10 @@ object ChatToolRegistry {
                     "virtual_screen_create" -> virtualScreenCreate(context)
                     "virtual_screen_release" -> virtualScreenRelease(context)
                     "virtual_screen_capture" -> virtualScreenCapture(context, args.optString("path", ""))
+                    "shower_overlay_show" -> showerOverlayShow(context)
+                    "shower_overlay_hide" -> showerOverlayHide()
+                    "shower_status" -> showerStatus(context)
+                    "shower_log_read" -> showerLogRead(args.optInt("max_chars", 8000))
                     "autoglm_run" -> AutoGlmSessionManager.start(context, args.optString("task", ""), args.optInt("max_steps", 25))
                     "autoglm_status" ->
                         AutoGlmSessionManager.status(
@@ -257,12 +283,7 @@ object ChatToolRegistry {
     private fun logsRead(maxChars: Int): JSONObject {
         val raw = AppLog.readAll()
         val safeMax = maxChars.coerceIn(1, 200_000)
-        val content =
-            if (raw.length <= safeMax) {
-                raw
-            } else {
-                raw.takeLast(safeMax)
-            }
+        val content = if (raw.length <= safeMax) raw else raw.takeLast(safeMax)
         return JSONObject().put("ok", true).put("content", content)
     }
 
@@ -305,6 +326,53 @@ object ChatToolRegistry {
         } else {
             JSONObject().put("ok", true).put("displayId", id).put("path", file.absolutePath).put("sizeBytes", file.length())
         }
+    }
+
+    private fun showerOverlayShow(context: Context): JSONObject {
+        val ctx = context.applicationContext
+        if (!Settings.canDrawOverlays(ctx)) {
+            return JSONObject().put("ok", false).put("error", "未授予悬浮窗权限（请在 权限配置 中开启）")
+        }
+        if (!ShizukuScreencap.isReady()) {
+            return JSONObject().put("ok", false).put("error", "Shizuku 未授权或未运行")
+        }
+        ShowerVirtualScreenOverlay.show(ctx)
+        return JSONObject().put("ok", true).put("showing", true)
+    }
+
+    private fun showerOverlayHide(): JSONObject {
+        ShowerVirtualScreenOverlay.hide()
+        return JSONObject().put("ok", true).put("showing", false)
+    }
+
+    private fun showerStatus(context: Context): JSONObject {
+        val ctx = context.applicationContext
+        val overlay = Settings.canDrawOverlays(ctx)
+        val shizuku = ShizukuScreencap.isReady()
+        val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
+        val displayId = runCatching { ShowerController.getDisplayId() }.getOrNull()
+        val showing = ShowerVirtualScreenOverlay.isShowing()
+        return JSONObject()
+            .put("ok", true)
+            .put("overlayPermission", overlay)
+            .put("shizukuReady", shizuku)
+            .put("binderAlive", binderAlive)
+            .put("displayId", displayId ?: JSONObject.NULL)
+            .put("overlayShowing", showing)
+    }
+
+    private fun showerLogRead(maxChars: Int): JSONObject {
+        val safeMax = maxChars.coerceIn(1, 200_000)
+        val runner = ShowerEnvironment.shellRunner
+            ?: return JSONObject().put("ok", false).put("error", "Shower ShellRunner 未初始化")
+
+        val content =
+            runBlocking(Dispatchers.IO) {
+                val r = runner.run("cat /data/local/tmp/shower.log 2>/dev/null || true", com.ai.assistance.showerclient.ShellIdentity.SHELL)
+                (r.stdout + if (r.stderr.isBlank()) "" else "\n" + r.stderr).trim()
+            }
+        val out = if (content.length <= safeMax) content else content.takeLast(safeMax)
+        return JSONObject().put("ok", true).put("content", out)
     }
 
     private fun parseArgs(argumentsJson: String): JSONObject {

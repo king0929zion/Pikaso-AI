@@ -12,9 +12,10 @@ import rikka.shizuku.Shizuku
 
 object ShizukuScreencap {
     enum class CaptureMode {
-        /** AutoGLM 官方链路：`screencap -p` 生成 PNG，直接 base64 传给模型。 */
+        /** AutoGLM 官方链路：`screencap -p` 生成 PNG，并以 Base64 形式传给模型。 */
         AUTOGLM_PNG,
-        /** 通用预览/日志：压缩成 JPEG，尽量减少体积。 */
+
+        /** 通用预览/日志：压缩为 JPEG，尽量减少体积。 */
         COMPACT_JPEG,
     }
 
@@ -97,8 +98,8 @@ object ShizukuScreencap {
     }
 
     private fun buildAutoGlmDataUrl(rawPngBytes: ByteArray): Triple<String, ByteArray, String> {
-        // 尽量保持与官方一致：PNG + data:image/png;base64
-        // 同时对极端大图做一次“缩放后仍为 PNG”的压缩，避免触发服务端请求体限制导致 400/1210。
+        // 尽量保持与 OpenAI 兼容形式：data:image/png;base64,<...>
+        // 同时对极端大图做一次“缩放后仍为 PNG”的压缩，避免触发服务端大小限制导致 400/1210。
         val targetMaxBytes = 3_200_000
         var bytes = rawPngBytes
 

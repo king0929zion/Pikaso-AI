@@ -36,50 +36,41 @@ class AutoGlmVisionClient(
             val endpoint = EndpointCompleter.complete(settings.endpoint)
             val isAutoGlm = isAutoGlmModel(settings.model)
 
-            val messages = JSONArray()
-            // 对齐官方 Open-AutoGLM：使用 system role
-            if (systemPrompt.isNotBlank()) {
-                messages.put(JSONObject().put("role", "system").put("content", systemPrompt.trim()))
-            }
-
-            val userContent =
-                JSONArray()
-                    .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", imageDataUrl)))
-                    .put(JSONObject().put("type", "text").put("text", userText.trim()))
-            messages.put(JSONObject().put("role", "user").put("content", userContent))
-
-            val base = JSONObject()
-            base.put("model", settings.model)
-            base.put("messages", messages)
-            base.put("temperature", settings.temperature.toDouble())
-            base.put("top_p", settings.topP.toDouble())
-
-            if (isAutoGlm) {
-                val maxTokens =
-                    settings.maxTokens
-                        .takeIf { it > 0 }
-                        ?.coerceIn(1, 8192)
-                        ?: 3000
-                base.put("max_tokens", maxTokens)
-                base.put("frequency_penalty", 0.2)
-            } else {
-                base.put("max_tokens", settings.maxTokens)
-            }
+            val normalizedImage = normalizeBigModelImageUrl(endpoint, imageDataUrl)
+            val originalImage = imageDataUrl.trim()
+            val baseBodies =
+                buildList {
+                    add(buildBaseBody(settings, systemPrompt, userText, normalizedImage))
+                    if (normalizedImage != originalImage) {
+                        add(buildBaseBody(settings, systemPrompt, userText, originalImage))
+                    }
+                }
 
             val attempts =
                 if (!isAutoGlm) {
-                    listOf(Attempt("default", base.put("stream", false) as JSONObject))
+                    listOf(Attempt("default", JSONObject(baseBodies.first().toString()).put("stream", false)))
                 } else {
-                    val minimal = JSONObject(base.toString())
-                    minimal.remove("temperature")
-                    minimal.remove("top_p")
-                    minimal.put("stream", false)
-                    listOf(
-                        Attempt("autoglm_stream_true", JSONObject(base.toString()).put("stream", true)),
-                        Attempt("autoglm_stream_false", JSONObject(base.toString()).put("stream", false)),
-                        // 部分网关对参数更严格：再尝试去掉温度/TopP
-                        Attempt("autoglm_minimal", minimal),
-                    )
+                    val maxTokens =
+                        settings.maxTokens
+                            .takeIf { it > 0 }
+                            ?.coerceIn(1, 8192)
+                            ?: 3000
+
+                    baseBodies.flatMapIndexed { idx, base0 ->
+                        val base = JSONObject(base0.toString()).put("max_tokens", maxTokens)
+                        val minimal =
+                            JSONObject(base.toString()).apply {
+                                remove("temperature")
+                                remove("top_p")
+                                put("stream", false)
+                            }
+                        val suffix = if (idx == 0) "normalized" else "original"
+                        listOf(
+                            Attempt("autoglm_${suffix}_stream_true", JSONObject(base.toString()).put("stream", true)),
+                            Attempt("autoglm_${suffix}_stream_false", JSONObject(base.toString()).put("stream", false)),
+                            Attempt("autoglm_${suffix}_minimal", minimal),
+                        )
+                    }
                 }
 
             var lastError: Throwable? = null
@@ -152,11 +143,15 @@ class AutoGlmVisionClient(
                     if (part.optString("type") != "image_url") continue
                     val imageUrl = part.optJSONObject("image_url") ?: continue
                     val url = imageUrl.optString("url")
-                    if (!url.startsWith("data:", ignoreCase = true)) continue
-                    val commaIdx = url.indexOf(',')
-                    val meta = if (commaIdx > 0) url.substring(0, commaIdx) else "data:<unknown>"
-                    val b64Len = if (commaIdx > 0) (url.length - commaIdx - 1).coerceAtLeast(0) else url.length
-                    imageUrl.put("url", "$meta,<base64_len=$b64Len>")
+                    if (url.isBlank()) continue
+                    if (url.startsWith("data:", ignoreCase = true)) {
+                        val commaIdx = url.indexOf(',')
+                        val meta = if (commaIdx > 0) url.substring(0, commaIdx) else "data:<unknown>"
+                        val b64Len = if (commaIdx > 0) (url.length - commaIdx - 1).coerceAtLeast(0) else url.length
+                        imageUrl.put("url", "$meta,<base64_len=$b64Len>")
+                    } else if (url.length > 120) {
+                        imageUrl.put("url", "<len=${url.length}>")
+                    }
                 }
             }
             copy.toString()
@@ -241,5 +236,48 @@ class AutoGlmVisionClient(
         val json = JSONObject(raw)
         val message = json.getJSONArray("choices").getJSONObject(0).getJSONObject("message")
         return extractTextFromContent(message.opt("content")).trim()
+    }
+
+    private fun normalizeBigModelImageUrl(endpoint: String, input: String): String {
+        val trimmed = input.trim()
+        if (!endpoint.contains("open.bigmodel.cn", ignoreCase = true)) return trimmed
+
+        // BigModel OpenAPI 的 image_url.url 描述为“URL 地址或 Base64 编码”
+        // 优先传纯 Base64，避免 data:image/...;base64,<...> 触发 400/1210。
+        if (trimmed.startsWith("data:", ignoreCase = true)) {
+            val commaIdx = trimmed.indexOf(',')
+            if (commaIdx > 0 && commaIdx < trimmed.length - 1) {
+                return trimmed.substring(commaIdx + 1).trim()
+            }
+        }
+        return trimmed
+    }
+
+    private fun buildBaseBody(
+        settings: AiSettings,
+        systemPrompt: String,
+        userText: String,
+        imageUrl: String,
+    ): JSONObject {
+        val messages = JSONArray()
+
+        // 对齐官方 OpenAPI：system role 可选
+        if (systemPrompt.isNotBlank()) {
+            messages.put(JSONObject().put("role", "system").put("content", systemPrompt.trim()))
+        }
+
+        val userContent =
+            JSONArray()
+                .put(JSONObject().put("type", "text").put("text", userText.trim()))
+                .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", imageUrl)))
+        messages.put(JSONObject().put("role", "user").put("content", userContent))
+
+        return JSONObject().apply {
+            put("model", settings.model)
+            put("messages", messages)
+            put("temperature", settings.temperature.toDouble())
+            put("top_p", settings.topP.toDouble())
+            put("max_tokens", settings.maxTokens)
+        }
     }
 }

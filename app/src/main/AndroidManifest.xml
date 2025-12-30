@@ -51,6 +51,16 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/operit_accessibility_service" />
         </service>
+
+        <!-- Receive Shower Binder handoff broadcast from shower-server.jar (Operit-style virtual display) -->
+        <receiver
+            android:name=".virtualdisplay.shower.ShowerBinderReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ai.assistance.operit.action.SHOWER_BINDER_READY" />
+                <action android:name="com.example.operit.action.SHOWER_BINDER_READY" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

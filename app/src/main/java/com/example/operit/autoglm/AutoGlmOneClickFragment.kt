@@ -37,9 +37,9 @@ class AutoGlmOneClickFragment : Fragment() {
         val prefs = AiPreferences.get(requireContext())
         val existing = prefs.load(AiPreferences.PROFILE_UI_CONTROLLER)
         if (existing.provider == AiProvider.ZHIPU && existing.apiKey.isNotBlank()) {
-            tvStatus.text = "已检测到现有 AutoGLM 配置（UI 控制器）：${existing.model}"
+            tvStatus.text = "已检测到现有 AutoGLM 配置（UI 控制模型）：${existing.model}"
         } else {
-            tvStatus.text = "未配置 AutoGLM（UI 控制器）。"
+            tvStatus.text = "未配置 AutoGLM（UI 控制模型）"
         }
 
         val endpoint = AiProvider.ZHIPU.defaultEndpoint
@@ -50,7 +50,7 @@ class AutoGlmOneClickFragment : Fragment() {
             val url = "https://open.bigmodel.cn/usercenter/apikeys"
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(requireContext(), "无法打开链接：$url", Toast.LENGTH_SHORT).show()
             }
         }
@@ -58,11 +58,11 @@ class AutoGlmOneClickFragment : Fragment() {
         view.findViewById<View>(R.id.btnConfigure).setOnClickListener {
             val apiKey = etApiKey.text?.toString().orEmpty().trim()
             if (apiKey.isBlank()) {
-                tvStatus.text = "请先填写智谱 API Key。"
+                tvStatus.text = "请先填写智谱 API Key"
                 return@setOnClickListener
             }
 
-            // Operit 设计：AutoGLM 模型配置独立于主对话（写入 UI_CONTROLLER profile）
+            // AutoGLM 模型配置独立于主对话模型（写入 UI_CONTROLLER profile）
             prefs.save(
                 AiPreferences.PROFILE_UI_CONTROLLER,
                 AiSettings(
@@ -77,8 +77,13 @@ class AutoGlmOneClickFragment : Fragment() {
             )
 
             tvStatus.text =
-                "已完成 AutoGLM 一键配置 ✅\n- 写入 UI 控制器模型：$model\n- Endpoint：$endpoint\n\n现在可以返回工具箱使用“AutoGLM 执行器”。"
+                """
+                已完成 AutoGLM 一键配置 ✅
+                - UI 控制模型：$model
+                - Endpoint：$endpoint
+
+                现在可以返回工具箱使用“AutoGLM 连接测试 / 执行器”。
+                """.trimIndent()
         }
     }
 }
-

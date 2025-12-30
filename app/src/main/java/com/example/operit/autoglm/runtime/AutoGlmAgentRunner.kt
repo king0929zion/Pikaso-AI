@@ -129,7 +129,7 @@ class AutoGlmAgentRunner(
             } else {
                 appendLine("继续执行同一任务：$task")
             }
-            appendLine("当前步骤：$step / $maxSteps（每步都会结合最新截图）")
+            appendLine("当前步数：$step / $maxSteps（每步都会结合最新截图）")
             if (lastExecSummary.isNotBlank()) {
                 appendLine("上一动作结果：$lastExecSummary")
             }
