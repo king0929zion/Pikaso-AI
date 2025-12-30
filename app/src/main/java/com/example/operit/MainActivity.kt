@@ -80,7 +80,6 @@ class MainActivity : AppCompatActivity() {
             R.id.navTools to ToolsFragment(),
             R.id.navScripts to ScriptsFragment(),
             R.id.navLogs to LogsFragment(),
-            R.id.navHelp to HelpFragment(),
             R.id.navSettings to SettingsFragment()
         )
 
@@ -114,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSidebarActiveState(activeId: Int) {
-        val ids = listOf(R.id.navChat, R.id.navTools, R.id.navScripts, R.id.navLogs, R.id.navHelp, R.id.navSettings)
+        val ids = listOf(R.id.navChat, R.id.navTools, R.id.navScripts, R.id.navLogs, R.id.navSettings)
         ids.forEach { id ->
             val view = findViewById<TextView>(id)
             if (id == activeId) {

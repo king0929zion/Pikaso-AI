@@ -84,12 +84,6 @@
             app:drawableStartCompat="@drawable/ic_terminal"/>
 
         <TextView
-            android:id="@+id/navHelp"
-            style="@style/Widget.Pikaso.NavItem"
-            android:text="@string/nav_help"
-            app:drawableStartCompat="@drawable/ic_help"/>
-
-        <TextView
             android:id="@+id/navSettings"
             style="@style/Widget.Pikaso.NavItem"
             android:text="@string/nav_settings"
