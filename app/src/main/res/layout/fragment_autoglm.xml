@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_light_background"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -20,10 +20,10 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/bg_tool_icon"
-            android:backgroundTint="@color/md_theme_light_surface"
+            android:backgroundTint="?attr/colorSurface"
             android:rotation="270"
             android:src="@drawable/ic_arrow_upward"
-            app:tint="@color/md_theme_light_onBackground" />
+            app:tint="?attr/colorOnSurface" />
 
         <TextView
             android:layout_width="0dp"
@@ -32,23 +32,23 @@
             android:layout_weight="1"
             android:fontFamily="serif"
             android:text="AutoGLM 执行器"
-            android:textColor="@color/md_theme_light_onBackground"
+            android:textColor="?attr/colorOnBackground"
             android:textSize="22sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnOneClick"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键配置" />
     </LinearLayout>
 
     <!-- Task Input -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        app:cardBackgroundColor="@color/md_theme_light_surface"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp">
 
@@ -84,14 +84,14 @@
                 android:layout_marginTop="12dp"
                 android:text="执行" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Log -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        app:cardBackgroundColor="@color/md_theme_light_surface"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp">
 
@@ -107,9 +107,9 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:padding="16dp"
-                android:textColor="@color/md_theme_light_onSurface"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp" />
         </ScrollView>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

@@ -57,6 +57,33 @@ class OperitAccessibilityService : AccessibilityService() {
         if (!ok) onDone?.invoke(false)
     }
 
+    fun performLongPress(x: Float, y: Float, onDone: ((Boolean) -> Unit)? = null) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            onDone?.invoke(false)
+            return
+        }
+
+        val path = Path().apply { moveTo(x, y) }
+        val stroke = GestureDescription.StrokeDescription(path, 0, 600)
+        val gesture = GestureDescription.Builder().addStroke(stroke).build()
+
+        val ok =
+            dispatchGesture(
+                gesture,
+                object : GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: GestureDescription?) {
+                        onDone?.invoke(true)
+                    }
+
+                    override fun onCancelled(gestureDescription: GestureDescription?) {
+                        onDone?.invoke(false)
+                    }
+                },
+                null,
+            )
+        if (!ok) onDone?.invoke(false)
+    }
+
     fun performSwipe(
         startX: Float,
         startY: Float,
@@ -120,4 +147,3 @@ class OperitAccessibilityService : AccessibilityService() {
             private set
     }
 }
-
