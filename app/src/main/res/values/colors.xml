@@ -26,8 +26,8 @@
     <color name="md_theme_light_outlineVariant">#C4C7C5</color>
     <color name="md_theme_light_scrim">#000000</color>
 
-    <color name="switch_track">#787674</color>
+    <color name="switch_track_static">#787674</color>
     <color name="switch_track_off">#787674</color>
-    <color name="switch_thumb">#FFFFFF</color>
+    <color name="switch_thumb_static">#FFFFFF</color>
     <color name="switch_thumb_off">#EEEEEE</color>
 </resources>
