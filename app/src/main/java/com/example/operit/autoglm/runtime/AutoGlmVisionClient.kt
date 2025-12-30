@@ -70,17 +70,15 @@ class AutoGlmVisionClient(
                 if (!isAutoGlm) {
                     listOf(Attempt("default", base.put("stream", false) as JSONObject))
                 } else {
+                    val minimal = JSONObject(base.toString())
+                    minimal.remove("temperature")
+                    minimal.remove("top_p")
+                    minimal.put("stream", false)
                     listOf(
                         Attempt("autoglm_stream_true", JSONObject(base.toString()).put("stream", true)),
                         Attempt("autoglm_stream_false", JSONObject(base.toString()).put("stream", false)),
                         // 部分网关对参数更严格：再尝试去掉温度/TopP
-                        Attempt(
-                            "autoglm_minimal",
-                            JSONObject(base.toString())
-                                .remove("temperature")
-                                .remove("top_p")
-                                .put("stream", false),
-                        ),
+                        Attempt("autoglm_minimal", minimal),
                     )
                 }
 
