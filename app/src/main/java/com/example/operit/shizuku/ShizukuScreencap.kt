@@ -11,6 +11,13 @@ import java.util.concurrent.TimeUnit
 import rikka.shizuku.Shizuku
 
 object ShizukuScreencap {
+    enum class CaptureMode {
+        /** AutoGLM 官方链路：`screencap -p` 生成 PNG，直接 base64 传给模型。 */
+        AUTOGLM_PNG,
+        /** 通用预览/日志：压缩成 JPEG，尽量减少体积。 */
+        COMPACT_JPEG,
+    }
+
     data class CaptureResult(
         val screenshotFile: File,
         val imageBytes: ByteArray,
@@ -21,10 +28,15 @@ object ShizukuScreencap {
     )
 
     fun isReady(): Boolean {
-        return Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
+        return Shizuku.pingBinder() &&
+            Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
     }
 
-    fun capture(context: Context, timeoutMs: Long = 10_000L): Result<CaptureResult> {
+    fun capture(
+        context: Context,
+        timeoutMs: Long = 10_000L,
+        mode: CaptureMode = CaptureMode.COMPACT_JPEG,
+    ): Result<CaptureResult> {
         return runCatching {
             if (!isReady()) error("Shizuku 未授权或未运行")
 
@@ -45,12 +57,15 @@ object ShizukuScreencap {
             val finished = waitFor(proc, timeoutMs)
             if (!finished) {
                 runCatching { proc.destroy() }
-                error("screencap 超时（>${timeoutMs}ms）")
+                error("screencap 超时：${timeoutMs}ms")
             }
 
             val exitCode = runCatching { proc.exitValue() }.getOrNull() ?: 0
             if (exitCode != 0) {
-                val err = runCatching { proc.errorStream.bufferedReader().use { it.readText().trim() } }.getOrNull().orEmpty()
+                val err =
+                    runCatching { proc.errorStream.bufferedReader().use { it.readText().trim() } }
+                        .getOrNull()
+                        .orEmpty()
                 error("screencap 失败：exit=$exitCode${if (err.isBlank()) "" else ", err=$err"}")
             }
             if (!file.exists() || file.length() <= 0L) {
@@ -64,7 +79,11 @@ object ShizukuScreencap {
             val width = options.outWidth.takeIf { it > 0 }
             val height = options.outHeight.takeIf { it > 0 }
 
-            val (dataUrl, imageBytes, mimeType) = buildCompactDataUrl(file, rawBytes)
+            val (dataUrl, imageBytes, mimeType) =
+                when (mode) {
+                    CaptureMode.AUTOGLM_PNG -> buildAutoGlmDataUrl(rawBytes)
+                    CaptureMode.COMPACT_JPEG -> buildCompactDataUrl(file, rawBytes)
+                }
 
             CaptureResult(
                 screenshotFile = file,
@@ -75,6 +94,11 @@ object ShizukuScreencap {
                 mimeType = mimeType,
             )
         }
+    }
+
+    private fun buildAutoGlmDataUrl(rawPngBytes: ByteArray): Triple<String, ByteArray, String> {
+        val b64 = Base64.encodeToString(rawPngBytes, Base64.NO_WRAP)
+        return Triple("data:image/png;base64,$b64", rawPngBytes, "image/png")
     }
 
     private fun buildCompactDataUrl(file: File, rawBytes: ByteArray): Triple<String, ByteArray, String> {
@@ -155,7 +179,7 @@ object ShizukuScreencap {
     }
 
     private fun newProcess(cmd: Array<String>): Process {
-        // Shizuku 13+ 将 newProcess 设为 private，但仍可通过反射调用（返回 Process）。
+        // Shizuku 13+ 将 newProcess 设为 private，但仍可通过反射调用（返回 Process）
         val m =
             Shizuku::class.java.getDeclaredMethod(
                 "newProcess",

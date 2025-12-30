@@ -2,9 +2,9 @@ package com.example.operit.autoglm.runtime
 
 import android.content.Context
 import com.example.operit.ai.AiSettings
+import com.example.operit.autoglm.agent.AutoGlmAgentAction
 import com.example.operit.autoglm.agent.AutoGlmAgentParser
 import com.example.operit.autoglm.agent.AutoGlmAgentPrompts
-import com.example.operit.autoglm.agent.AutoGlmAgentAction
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
 import java.text.SimpleDateFormat
@@ -18,8 +18,7 @@ class AutoGlmAgentRunner(
     private val onLog: (String) -> Unit,
     private val onScreenshot: ((String) -> Unit)? = null,
 ) {
-    @Volatile
-    var cancelled: Boolean = false
+    @Volatile var cancelled: Boolean = false
 
     private val client = AutoGlmVisionClient()
     private val executor = AutoGlmActionExecutor(context, serviceProvider)
@@ -43,37 +42,53 @@ class AutoGlmAgentRunner(
                 onLog("--------------------------------------------------")
                 onLog("Step $step/$maxSteps：截图 -> 规划 -> 执行")
 
-                val capture = ShizukuScreencap.capture(context).getOrElse { e ->
-                    throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
-                }
-                onScreenshot?.invoke(capture.screenshotFile.absolutePath)
-                capture.width?.let { w ->
-                    capture.height?.let { h ->
-                        onLog("截图：${w}x$h，上传=${capture.mimeType} ${capture.imageBytes.size} bytes")
+                val capture =
+                    ShizukuScreencap.capture(
+                        context = context,
+                        mode = ShizukuScreencap.CaptureMode.AUTOGLM_PNG,
+                    ).getOrElse { e ->
+                        throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
                     }
+                onScreenshot?.invoke(capture.screenshotFile.absolutePath)
+                val w = capture.width ?: -1
+                val h = capture.height ?: -1
+                if (w > 0 && h > 0) {
+                    onLog("截图：${w}x$h，上传 ${capture.mimeType} ${capture.imageBytes.size} bytes")
                 }
 
-                val userText = buildUserText(task = task, step = step, maxSteps = maxSteps, lastExecSummary = lastExecSummary)
-                val reply = client.chatOnce(settings, systemPrompt, userText, capture.dataUrl).getOrElse { e ->
-                    val cfg = "endpoint=${settings.endpoint}, model=${settings.model}"
-                    throw IllegalStateException("模型调用失败：${e.message ?: e.javaClass.simpleName}（$cfg）", e)
-                }
+                val userText =
+                    buildUserText(
+                        task = task,
+                        step = step,
+                        maxSteps = maxSteps,
+                        lastExecSummary = lastExecSummary,
+                    )
+
+                val reply =
+                    client.chatOnce(settings, systemPrompt, userText, capture.dataUrl).getOrElse { e ->
+                        val cfg = "endpoint=${settings.endpoint}, model=${settings.model}"
+                        throw IllegalStateException("模型调用失败：${e.message ?: e.javaClass.simpleName}（$cfg）", e)
+                    }
 
                 if (cancelled) return@runCatching
 
                 val parsed = AutoGlmAgentParser.parse(reply)
                 parsed.thinking?.takeIf { it.isNotBlank() }?.let { onLog("思考：$it") }
-                val action = parsed.action ?: throw IllegalStateException("无法解析模型输出：缺少 action\n$reply")
+                val action =
+                    parsed.action
+                        ?: throw IllegalStateException("无法解析模型输出：缺少 action\n$reply")
 
                 when (action) {
                     is AutoGlmAgentAction.Finish -> {
                         onLog("完成：${action.message}")
                         return@runCatching
                     }
+
                     is AutoGlmAgentAction.Interrupt -> {
                         onLog("中断：${action.reason}")
                         return@runCatching
                     }
+
                     is AutoGlmAgentAction.Do -> {
                         val name = action.action.trim()
                         onLog("动作：do(action=\"$name\", ...)")
@@ -81,13 +96,13 @@ class AutoGlmAgentRunner(
                         lastExecSummary =
                             buildString {
                                 append("action=").append(name)
-                                if (exec.ok) append(", ok=true") else append(", ok=false")
+                                append(", ok=").append(exec.ok)
                                 exec.message?.takeIf { it.isNotBlank() }?.let { append(", message=").append(it) }
                             }
                         if (!exec.ok) {
                             onLog("动作失败：${exec.message ?: name}")
                         } else if (exec.shouldFinish) {
-                            onLog(exec.message ?: "需要用户接管/确认，已停止执行")
+                            onLog(exec.message ?: "需要用户接管确认，已停止执行")
                             return@runCatching
                         }
                         Thread.sleep(450)
@@ -101,7 +116,12 @@ class AutoGlmAgentRunner(
         }
     }
 
-    private fun buildUserText(task: String, step: Int, maxSteps: Int, lastExecSummary: String): String {
+    private fun buildUserText(
+        task: String,
+        step: Int,
+        maxSteps: Int,
+        lastExecSummary: String,
+    ): String {
         val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         return buildString {
             if (step == 1) {

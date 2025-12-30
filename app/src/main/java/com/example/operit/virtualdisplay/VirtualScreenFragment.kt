@@ -32,15 +32,14 @@ class VirtualScreenFragment : Fragment() {
     private lateinit var btnRealAuto: MaterialButton
 
     @Volatile private var autoRunning: Boolean = false
+    @Volatile private var autoThread: Thread? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_virtual_screen, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.btnBack).setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
+        view.findViewById<View>(R.id.btnBack).setOnClickListener { parentFragmentManager.popBackStack() }
 
         tvStatus = view.findViewById(R.id.tvStatus)
         tvLastCapture = view.findViewById(R.id.tvLastCapture)
@@ -52,15 +51,6 @@ class VirtualScreenFragment : Fragment() {
         btnCapture = view.findViewById(R.id.btnCapture)
         btnRealCapture = view.findViewById(R.id.btnRealCapture)
         btnRealAuto = view.findViewById(R.id.btnRealAuto)
-
-        btnRealCapture.setOnClickListener { captureRealScreenOnce() }
-        btnRealAuto.setOnClickListener {
-            if (autoRunning) {
-                stopAutoPreview()
-            } else {
-                startAutoPreview()
-            }
-        }
 
         btnCreate.setOnClickListener {
             val id = manager.ensureVirtualDisplay()
@@ -78,8 +68,10 @@ class VirtualScreenFragment : Fragment() {
             refreshUi()
         }
 
-        btnCapture.setOnClickListener {
-            captureFrame()
+        btnCapture.setOnClickListener { captureVirtualFrameAsync() }
+        btnRealCapture.setOnClickListener { captureRealScreenOnceAsync() }
+        btnRealAuto.setOnClickListener {
+            if (autoRunning) stopAutoPreview() else startAutoPreview()
         }
 
         refreshUi()
@@ -99,15 +91,16 @@ class VirtualScreenFragment : Fragment() {
 
         tvRealStatus.text =
             if (ShizukuScreencap.isReady()) {
-                "已就绪：可直接截图显示真实屏幕。"
+                "已就绪：可直接截图显示真实屏幕（Shizuku）"
             } else {
-                "未就绪：请在“权限配置”中授权 Shizuku（用于截图）。"
+                "未就绪：请在“权限配置”中授予 Shizuku（用于截图）"
             }
+
         btnRealCapture.isEnabled = true
         btnRealAuto.text = if (autoRunning) "停止预览" else "实时预览"
     }
 
-    private fun captureFrame() {
+    private fun captureVirtualFrameAsync() {
         val ctx = context ?: return
         val id = manager.ensureVirtualDisplay()
         if (id == null) {
@@ -123,7 +116,6 @@ class VirtualScreenFragment : Fragment() {
         Thread {
             val ok = manager.captureLatestFrameToFile(file)
             val bmp = if (ok && file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
-
             activity?.runOnUiThread {
                 btnCapture.isEnabled = true
                 if (!ok || bmp == null) {
@@ -139,10 +131,10 @@ class VirtualScreenFragment : Fragment() {
         }.start()
     }
 
-    private fun captureRealScreenOnce() {
+    private fun captureRealScreenOnceAsync() {
         val ctx = context ?: return
         if (!ShizukuScreencap.isReady()) {
-            Toast.makeText(ctx, "Shizuku 未授权/未运行", Toast.LENGTH_SHORT).show()
+            Toast.makeText(ctx, "Shizuku 未授权或未运行", Toast.LENGTH_SHORT).show()
             refreshUi()
             return
         }
@@ -151,20 +143,23 @@ class VirtualScreenFragment : Fragment() {
         tvRealLastCapture.text = "正在截图..."
 
         Thread {
-            val result = ShizukuScreencap.capture(ctx).getOrElse { e ->
-                activity?.runOnUiThread {
-                    btnRealCapture.isEnabled = true
-                    tvRealLastCapture.text = "截图失败：${e.message ?: e.javaClass.simpleName}"
-                    Toast.makeText(ctx, "截图失败", Toast.LENGTH_SHORT).show()
+            val result =
+                ShizukuScreencap.capture(ctx).getOrElse { e ->
+                    activity?.runOnUiThread {
+                        btnRealCapture.isEnabled = true
+                        tvRealLastCapture.text = "截图失败：${e.message ?: e.javaClass.simpleName}"
+                        Toast.makeText(ctx, "截图失败", Toast.LENGTH_SHORT).show()
+                        refreshUi()
+                    }
+                    return@Thread
                 }
-                return@Thread
-            }
 
             val bmp = BitmapFactory.decodeFile(result.screenshotFile.absolutePath)
             activity?.runOnUiThread {
                 btnRealCapture.isEnabled = true
                 if (bmp == null) {
                     tvRealLastCapture.text = "截图失败：无法解码图片"
+                    refreshUi()
                     return@runOnUiThread
                 }
                 ivPreview.setImageBitmap(bmp)
@@ -179,23 +174,42 @@ class VirtualScreenFragment : Fragment() {
     private fun startAutoPreview() {
         val ctx = context ?: return
         if (!ShizukuScreencap.isReady()) {
-            Toast.makeText(ctx, "Shizuku 未授权/未运行", Toast.LENGTH_SHORT).show()
+            Toast.makeText(ctx, "Shizuku 未授权或未运行", Toast.LENGTH_SHORT).show()
             refreshUi()
             return
         }
+
+        if (autoRunning) return
         autoRunning = true
         refreshUi()
 
-        Thread {
-            while (autoRunning) {
-                captureRealScreenOnce()
-                Thread.sleep(1200)
-            }
-        }.start()
+        val t =
+            Thread {
+                while (autoRunning) {
+                    val r = ShizukuScreencap.capture(ctx).getOrNull()
+                    if (r != null) {
+                        val bmp = BitmapFactory.decodeFile(r.screenshotFile.absolutePath)
+                        activity?.runOnUiThread {
+                            if (bmp != null) {
+                                ivPreview.setImageBitmap(bmp)
+                                val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                                tvRealLastCapture.text =
+                                    "最新真实截图：$time\n${r.width ?: "?"}x${r.height ?: "?"}\n${r.screenshotFile.absolutePath}"
+                            }
+                            refreshUi()
+                        }
+                    }
+                    Thread.sleep(1200)
+                }
+            }.also { it.isDaemon = true }
+
+        autoThread = t
+        t.start()
     }
 
     private fun stopAutoPreview() {
         autoRunning = false
+        autoThread = null
         if (this::btnRealAuto.isInitialized) {
             activity?.runOnUiThread { refreshUi() }
         }

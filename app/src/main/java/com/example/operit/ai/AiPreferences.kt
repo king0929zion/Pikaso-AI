@@ -118,11 +118,11 @@ class AiPreferences private constructor(private val context: Context) {
         const val PROFILE_CHAT = "chat"
         const val PROFILE_UI_CONTROLLER = "ui_controller"
 
+        // UI 控制模型（AutoGLM）默认配置：用户只需填智谱 API Key 即可使用
         private const val DEFAULT_UI_CONTROLLER_MODEL = "autoglm-phone"
         private const val DEFAULT_UI_CONTROLLER_TEMPERATURE = 0.0f
-        private const val DEFAULT_UI_CONTROLLER_TOP_P = 0.8f
-        // BigModel autoglm-phone 对参数更严格，默认 token 上限不宜过大。
-        private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 1024
+        private const val DEFAULT_UI_CONTROLLER_TOP_P = 0.85f
+        private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 3000
 
         fun get(context: Context): AiPreferences = AiPreferences(context.applicationContext)
     }
