@@ -203,7 +203,11 @@ class ChatFragment : Fragment() {
             val systemPrompt =
                 systemPromptBase +
                     "\n\n你可以在需要时调用工具函数来操作应用内模块（脚本/日志/虚拟屏幕）。" +
-                    "对可能破坏性操作（如清空日志、覆盖脚本）应先向用户确认。"
+                    "对可能破坏性操作（如清空日志、覆盖脚本）应先向用户确认。" +
+                    "\n\n你也可以调用 AutoGLM 工具来执行跨应用的手机自动化任务：" +
+                    "先调用 autoglm_run(task=...) 获得 session_id，再用 autoglm_status(session_id=...) 获取进度/日志。" +
+                    "如需停止则调用 autoglm_cancel(session_id=...)。" +
+                    "涉及支付/隐私/删除等敏感步骤前必须先向用户二次确认。"
             conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
         conversation.add(OpenAiChatClient.Message(role = "user", content = text))

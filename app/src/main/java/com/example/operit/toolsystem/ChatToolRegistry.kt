@@ -2,6 +2,7 @@ package com.example.operit.toolsystem
 
 import android.content.Context
 import com.example.operit.ai.OpenAiChatClient
+import com.example.operit.autoglm.runtime.AutoGlmSessionManager
 import com.example.operit.logging.AppLog
 import com.example.operit.scripts.ScriptStore
 import com.example.operit.virtualdisplay.VirtualDisplayManager
@@ -96,6 +97,49 @@ object ChatToolRegistry {
                         )
                         .put("additionalProperties", false),
             ),
+            OpenAiChatClient.ToolDefinition(
+                name = "autoglm_run",
+                description = "启动 AutoGLM（autoglm-phone）执行手机自动化任务。需要无障碍与 Shizuku。返回 session_id，用 autoglm_status 查询进度。",
+                parameters =
+                    JSONObject()
+                        .put("type", "object")
+                        .put(
+                            "properties",
+                            JSONObject()
+                                .put("task", JSONObject().put("type", "string").put("description", "要执行的手机自动化任务"))
+                                .put("max_steps", JSONObject().put("type", "integer").put("description", "最大步数（可选，默认 25）")),
+                        )
+                        .put("required", JSONArray().put("task"))
+                        .put("additionalProperties", false),
+            ),
+            OpenAiChatClient.ToolDefinition(
+                name = "autoglm_status",
+                description = "查询 AutoGLM session 状态与日志片段。",
+                parameters =
+                    JSONObject()
+                        .put("type", "object")
+                        .put(
+                            "properties",
+                            JSONObject()
+                                .put("session_id", JSONObject().put("type", "string").put("description", "autoglm_run 返回的 session_id"))
+                                .put("max_chars", JSONObject().put("type", "integer").put("description", "返回日志最大字符数（可选，默认 8000）")),
+                        )
+                        .put("required", JSONArray().put("session_id"))
+                        .put("additionalProperties", false),
+            ),
+            OpenAiChatClient.ToolDefinition(
+                name = "autoglm_cancel",
+                description = "取消 AutoGLM session。",
+                parameters =
+                    JSONObject()
+                        .put("type", "object")
+                        .put(
+                            "properties",
+                            JSONObject().put("session_id", JSONObject().put("type", "string").put("description", "session_id")),
+                        )
+                        .put("required", JSONArray().put("session_id"))
+                        .put("additionalProperties", false),
+            ),
         )
     }
 
@@ -113,6 +157,13 @@ object ChatToolRegistry {
                     "virtual_screen_create" -> virtualScreenCreate(context)
                     "virtual_screen_release" -> virtualScreenRelease(context)
                     "virtual_screen_capture" -> virtualScreenCapture(context, args.optString("path", ""))
+                    "autoglm_run" -> AutoGlmSessionManager.start(context, args.optString("task", ""), args.optInt("max_steps", 25))
+                    "autoglm_status" ->
+                        AutoGlmSessionManager.status(
+                            sessionId = args.optString("session_id", ""),
+                            maxChars = args.optInt("max_chars", 8000),
+                        )
+                    "autoglm_cancel" -> AutoGlmSessionManager.cancel(args.optString("session_id", ""))
                     else -> JSONObject().put("ok", false).put("error", "未知工具：$name")
                 }
             result.toString()
@@ -267,4 +318,3 @@ object ChatToolRegistry {
         }
     }
 }
-
