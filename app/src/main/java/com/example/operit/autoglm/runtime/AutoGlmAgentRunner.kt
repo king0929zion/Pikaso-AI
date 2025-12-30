@@ -104,8 +104,12 @@ class AutoGlmAgentRunner(
     private fun buildUserText(task: String, step: Int, maxSteps: Int, lastExecSummary: String): String {
         val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         return buildString {
-            appendLine("任务：$task")
-            appendLine("当前步骤：$step / $maxSteps")
+            if (step == 1) {
+                appendLine("任务：$task")
+            } else {
+                appendLine("继续执行同一任务：$task")
+            }
+            appendLine("当前步骤：$step / $maxSteps（每步都会结合最新截图）")
             if (lastExecSummary.isNotBlank()) {
                 appendLine("上一动作结果：$lastExecSummary")
             }

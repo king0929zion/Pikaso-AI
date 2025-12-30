@@ -35,7 +35,6 @@ class AutoGlmVisionClient(
 
             val messages =
                 JSONArray()
-                    .put(JSONObject().put("role", "system").put("content", systemPrompt))
                     .put(
                         JSONObject()
                             .put("role", "user")
@@ -47,13 +46,21 @@ class AutoGlmVisionClient(
                                             .put("type", "image_url")
                                             .put("image_url", JSONObject().put("url", imageDataUrl)),
                                     )
-                                    .put(JSONObject().put("type", "text").put("text", userText)),
+                                    // 兼容 Operit/官方 CLI：把 system prompt 放进首条 user 文本里（避免部分模型对 system role 的限制）
+                                    .put(JSONObject().put("type", "text").put("text", buildString {
+                                        if (systemPrompt.isNotBlank()) {
+                                            append(systemPrompt.trim())
+                                            append("\n\n")
+                                        }
+                                        append(userText)
+                                    }.trim())),
                             ),
                     )
 
             val body =
                 JSONObject()
                     .put("model", settings.model)
+                    .put("stream", false)
                     .put("temperature", settings.temperature.toDouble())
                     .put("top_p", settings.topP.toDouble())
                     .put("messages", messages)
