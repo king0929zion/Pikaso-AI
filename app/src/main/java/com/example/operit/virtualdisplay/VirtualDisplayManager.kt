@@ -2,7 +2,6 @@ package com.example.operit.virtualdisplay
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.ImageFormat
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
@@ -99,50 +98,77 @@ class VirtualDisplayManager private constructor(private val context: Context) {
     }
 
     private fun createVirtualDisplay(): Int? {
-        return try {
-            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        release()
 
-            val metrics = DisplayMetrics()
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(metrics)
+        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
 
-            val width = metrics.widthPixels.coerceAtLeast(1)
-            val height = metrics.heightPixels.coerceAtLeast(1)
-            val densityDpi = metrics.densityDpi
+        val metrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealMetrics(metrics)
 
-            // 注意：PUBLIC flag 在普通应用上可能触发创建失败（权限限制），这里仅保留 PRESENTATION 以便展示/调试。
-            val reader =
-                try {
-                    ImageReader.newInstance(width, height, ImageFormat.FLEX_RGBA_8888, 2)
-                } catch (_: Throwable) {
-                    ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
-                }
-            imageReader = reader
-            val surface: Surface = reader.surface
+        // 对齐 Operit：去掉状态栏高度（某些 ROM 上全高可能导致画面/帧获取异常）
+        val statusBarHeight = getStatusBarHeight()
+        val width = metrics.widthPixels.coerceAtLeast(1)
+        val height = (metrics.heightPixels - statusBarHeight).coerceAtLeast(1)
+        val densityDpi = metrics.densityDpi.coerceAtLeast(1)
 
-            val flags =
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
+        val attempts =
+            listOf(
+                Attempt(
+                    name = "public_presentation",
+                    flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC or DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION,
+                ),
+                // 回退：某些设备/ROM 可能不接受 PUBLIC
+                Attempt(
+                    name = "presentation_only",
+                    flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION,
+                ),
+            )
 
-            val vd =
-                displayManager.createVirtualDisplay(
-                    "PikasoVirtualDisplay",
-                    width,
-                    height,
-                    densityDpi,
-                    surface,
-                    flags,
-                )
-            virtualDisplay = vd
+        for (attempt in attempts) {
+            try {
+                val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+                imageReader = reader
+                val surface: Surface = reader.surface
 
-            val id = vd.display?.displayId
-            displayId = id
+                AppLog.i(TAG, "createVirtualDisplay attempt=${attempt.name} size=${width}x$height dpi=$densityDpi flags=${attempt.flags}")
+                val vd =
+                    displayManager.createVirtualDisplay(
+                        "PikasoVirtualDisplay",
+                        width,
+                        height,
+                        densityDpi,
+                        surface,
+                        attempt.flags,
+                    )
+                virtualDisplay = vd
 
-            AppLog.i(TAG, "已创建虚拟屏幕 id=$id, size=${width}x$height, density=$densityDpi")
-            id
-        } catch (e: Exception) {
-            AppLog.e(TAG, "创建虚拟屏幕失败", e)
-            null
+                val id = vd.display?.displayId
+                displayId = id
+                AppLog.i(TAG, "已创建虚拟屏幕 id=$id (attempt=${attempt.name})")
+                return id
+            } catch (e: Throwable) {
+                AppLog.e(TAG, "创建虚拟屏幕失败 attempt=${attempt.name}: ${e.javaClass.simpleName} ${e.message ?: ""}".trim(), e)
+                // 清理后再尝试下一套
+                runCatching { imageReader?.close() }
+                imageReader = null
+                runCatching { virtualDisplay?.release() }
+                virtualDisplay = null
+                displayId = null
+            }
         }
+
+        return null
+    }
+
+    private data class Attempt(
+        val name: String,
+        val flags: Int,
+    )
+
+    private fun getStatusBarHeight(): Int {
+        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) context.resources.getDimensionPixelSize(resourceId) else 0
     }
 }
