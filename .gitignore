@@ -17,3 +17,4 @@ run_*_logs.zip
 artifact_*.zip
 .ci_artifacts/
 .ci_tmp/
+pikaso_log_*.txt

@@ -121,7 +121,8 @@ class AiPreferences private constructor(private val context: Context) {
         private const val DEFAULT_UI_CONTROLLER_MODEL = "autoglm-phone"
         private const val DEFAULT_UI_CONTROLLER_TEMPERATURE = 0.0f
         private const val DEFAULT_UI_CONTROLLER_TOP_P = 0.8f
-        private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 4096
+        // BigModel autoglm-phone 对参数更严格，默认 token 上限不宜过大。
+        private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 1024
 
         fun get(context: Context): AiPreferences = AiPreferences(context.applicationContext)
     }

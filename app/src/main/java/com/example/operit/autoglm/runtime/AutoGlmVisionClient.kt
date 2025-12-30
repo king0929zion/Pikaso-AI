@@ -19,6 +19,11 @@ class AutoGlmVisionClient(
             .writeTimeout(60, TimeUnit.SECONDS)
             .build(),
 ) {
+    private fun isAutoGlmModel(model: String): Boolean {
+        val m = model.trim().lowercase()
+        return m == "autoglm-phone" || m.startsWith("autoglm-")
+    }
+
     fun chatOnce(
         settings: AiSettings,
         systemPrompt: String,
@@ -51,8 +56,13 @@ class AutoGlmVisionClient(
                     .put("model", settings.model)
                     .put("temperature", settings.temperature.toDouble())
                     .put("top_p", settings.topP.toDouble())
-                    .put("max_tokens", settings.maxTokens)
                     .put("messages", messages)
+
+            // BigModel 的 autoglm-phone 对部分参数更严格；过大的 max_tokens 可能触发 400/1210（参数错误）。
+            // 这里对 AutoGLM 模型不主动传 max_tokens，交由服务端默认值处理。
+            if (!isAutoGlmModel(settings.model)) {
+                body.put("max_tokens", settings.maxTokens)
+            }
 
             val requestBuilder =
                 Request.Builder()
