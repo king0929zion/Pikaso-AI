@@ -46,10 +46,10 @@ class AutoGlmAgentRunner(
                 val capture = ShizukuScreencap.capture(context).getOrElse { e ->
                     throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
                 }
-                onScreenshot?.invoke(capture.pngFile.absolutePath)
+                onScreenshot?.invoke(capture.screenshotFile.absolutePath)
                 capture.width?.let { w ->
                     capture.height?.let { h ->
-                        onLog("截图：${w}x$h，${capture.pngBytes.size} bytes")
+                        onLog("截图：${w}x$h，上传=${capture.mimeType} ${capture.imageBytes.size} bytes")
                     }
                 }
 

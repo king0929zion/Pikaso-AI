@@ -160,7 +160,7 @@ class VirtualScreenFragment : Fragment() {
                 return@Thread
             }
 
-            val bmp = BitmapFactory.decodeFile(result.pngFile.absolutePath)
+            val bmp = BitmapFactory.decodeFile(result.screenshotFile.absolutePath)
             activity?.runOnUiThread {
                 btnRealCapture.isEnabled = true
                 if (bmp == null) {
@@ -170,7 +170,7 @@ class VirtualScreenFragment : Fragment() {
                 ivPreview.setImageBitmap(bmp)
                 val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
                 tvRealLastCapture.text =
-                    "最新真实截图：$time\n${result.width ?: "?"}x${result.height ?: "?"}\n${result.pngFile.absolutePath}"
+                    "最新真实截图：$time\n${result.width ?: "?"}x${result.height ?: "?"}\n${result.screenshotFile.absolutePath}"
                 refreshUi()
             }
         }.start()

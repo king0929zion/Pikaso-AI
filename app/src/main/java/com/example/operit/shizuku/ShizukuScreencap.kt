@@ -1,8 +1,10 @@
 package com.example.operit.shizuku
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -10,11 +12,12 @@ import rikka.shizuku.Shizuku
 
 object ShizukuScreencap {
     data class CaptureResult(
-        val pngFile: File,
-        val pngBytes: ByteArray,
+        val screenshotFile: File,
+        val imageBytes: ByteArray,
         val dataUrl: String,
         val width: Int?,
         val height: Int?,
+        val mimeType: String,
     )
 
     fun isReady(): Boolean {
@@ -54,18 +57,87 @@ object ShizukuScreencap {
                 error("screencap 未生成有效文件：${file.absolutePath}")
             }
 
-            val bytes = file.readBytes()
-
-            val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-            val dataUrl = "data:image/png;base64,$b64"
+            val rawBytes = file.readBytes()
 
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(file.absolutePath, options)
             val width = options.outWidth.takeIf { it > 0 }
             val height = options.outHeight.takeIf { it > 0 }
 
-            CaptureResult(pngFile = file, pngBytes = bytes, dataUrl = dataUrl, width = width, height = height)
+            val (dataUrl, imageBytes, mimeType) = buildCompactDataUrl(file, rawBytes)
+
+            CaptureResult(
+                screenshotFile = file,
+                imageBytes = imageBytes,
+                dataUrl = dataUrl,
+                width = width,
+                height = height,
+                mimeType = mimeType,
+            )
         }
+    }
+
+    private fun buildCompactDataUrl(file: File, rawBytes: ByteArray): Triple<String, ByteArray, String> {
+        // base64 会膨胀约 33%，这里控制原始 bytes 尽量 < 2MB，避免触发服务端参数/大小限制
+        val targetMaxBytes = 1_800_000
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        val srcW = bounds.outWidth
+        val srcH = bounds.outHeight
+        if (srcW <= 0 || srcH <= 0) {
+            val b64 = Base64.encodeToString(rawBytes, Base64.NO_WRAP)
+            return Triple("data:image/png;base64,$b64", rawBytes, "image/png")
+        }
+
+        fun calcInSampleSize(maxEdge: Int): Int {
+            var sample = 1
+            while (srcW / sample > maxEdge || srcH / sample > maxEdge) {
+                sample *= 2
+            }
+            return sample.coerceAtLeast(1)
+        }
+
+        val decodeOpts =
+            BitmapFactory.Options().apply {
+                inSampleSize = calcInSampleSize(1280)
+                inPreferredConfig = Bitmap.Config.RGB_565
+            }
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
+        if (bitmap == null) {
+            val b64 = Base64.encodeToString(rawBytes, Base64.NO_WRAP)
+            return Triple("data:image/png;base64,$b64", rawBytes, "image/png")
+        }
+
+        fun encodeJpegBytes(bmp: Bitmap, quality: Int): ByteArray {
+            val baos = ByteArrayOutputStream()
+            bmp.compress(Bitmap.CompressFormat.JPEG, quality.coerceIn(30, 95), baos)
+            return baos.toByteArray()
+        }
+
+        var working = bitmap
+        var outBytes = encodeJpegBytes(working, 75)
+        if (outBytes.size > targetMaxBytes) {
+            outBytes = encodeJpegBytes(working, 60)
+        }
+        if (outBytes.size > targetMaxBytes) {
+            val maxEdge = 960
+            val longer = maxOf(working.width, working.height).coerceAtLeast(1)
+            val scale = (maxEdge.toDouble() / longer).coerceIn(0.1, 1.0)
+            val newW = (working.width * scale).toInt().coerceAtLeast(1)
+            val newH = (working.height * scale).toInt().coerceAtLeast(1)
+            val scaled = Bitmap.createScaledBitmap(working, newW, newH, true)
+            if (scaled !== working) {
+                working.recycle()
+                working = scaled
+            }
+            outBytes = encodeJpegBytes(working, 60)
+        }
+
+        runCatching { working.recycle() }
+
+        val b64 = Base64.encodeToString(outBytes, Base64.NO_WRAP)
+        return Triple("data:image/jpeg;base64,$b64", outBytes, "image/jpeg")
     }
 
     private fun waitFor(proc: Process, timeoutMs: Long): Boolean {
