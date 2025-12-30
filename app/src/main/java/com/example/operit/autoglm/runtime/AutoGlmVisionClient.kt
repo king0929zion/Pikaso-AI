@@ -64,10 +64,39 @@ class AutoGlmVisionClient(
 
             httpClient.newCall(requestBuilder.build()).execute().use { resp ->
                 val raw = resp.body?.string().orEmpty()
-                if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}: $raw")
+                if (!resp.isSuccessful) {
+                    val detail = decodeErrorDetail(raw)
+                    throw IOException("HTTP ${resp.code}: ${detail.ifBlank { raw }}")
+                }
                 decodeContent(raw)
             }
         }
+    }
+
+    private fun decodeErrorDetail(raw: String): String {
+        return runCatching {
+            val json = JSONObject(raw)
+            val errObj = json.optJSONObject("error")
+            val code = (errObj?.opt("code") ?: json.opt("code"))?.toString().orEmpty()
+            val message =
+                errObj?.optString("message")
+                    ?: json.optString("message")
+                    ?: json.optString("msg")
+                    ?: json.optString("error")
+            val details =
+                errObj?.optString("details")
+                    ?: errObj?.optString("detail")
+                    ?: json.optString("detail")
+                    ?: json.optString("details")
+            buildString {
+                if (code.isNotBlank()) append(code).append(": ")
+                if (message.isNotBlank()) append(message)
+                if (details.isNotBlank() && details != message) {
+                    if (isNotEmpty()) append(" | ")
+                    append(details)
+                }
+            }.trim()
+        }.getOrNull().orEmpty()
     }
 
     private fun decodeContent(raw: String): String {

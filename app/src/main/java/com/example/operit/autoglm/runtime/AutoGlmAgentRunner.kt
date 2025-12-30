@@ -55,7 +55,8 @@ class AutoGlmAgentRunner(
 
                 val userText = buildUserText(task = task, step = step, maxSteps = maxSteps, lastExecSummary = lastExecSummary)
                 val reply = client.chatOnce(settings, systemPrompt, userText, capture.dataUrl).getOrElse { e ->
-                    throw IllegalStateException("模型调用失败：${e.message ?: e.javaClass.simpleName}", e)
+                    val cfg = "endpoint=${settings.endpoint}, model=${settings.model}"
+                    throw IllegalStateException("模型调用失败：${e.message ?: e.javaClass.simpleName}（$cfg）", e)
                 }
 
                 if (cancelled) return@runCatching

@@ -16,6 +16,8 @@ object EndpointCompleter {
             when {
                 path.isEmpty() -> "$endpointWithoutSlash/v1/chat/completions"
                 path.endsWith("/v1", ignoreCase = true) -> "$endpointWithoutSlash/chat/completions"
+                // Zhipu BigModel base url (docs often use base-url=https://open.bigmodel.cn/api/paas/v4)
+                path.endsWith("/api/paas/v4", ignoreCase = true) -> "$endpointWithoutSlash/chat/completions"
                 else -> trimmedEndpoint
             }
         } catch (_: Exception) {
@@ -23,4 +25,3 @@ object EndpointCompleter {
         }
     }
 }
-
