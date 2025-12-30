@@ -1,6 +1,8 @@
 package com.example.operit.autoglm.runtime
 
 import android.accessibilityservice.AccessibilityService
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -39,9 +41,9 @@ class AutoGlmActionExecutor(
             }
             "Tap" -> {
                 val element = args["element"].orEmpty()
-                val (x, y) = parseRelativePoint(element) ?: return ExecResult(false, "Tap 坐标无效：$element")
-                val (absX, absY) = toAbsPoint(x, y)
-                val ok = awaitGesture { cb -> service.performTap(absX, absY, cb) }
+                val (nx, ny) = parseRelativePoint(element) ?: return ExecResult(false, "Tap 坐标无效：$element")
+                val (absX, absY) = toAbsPoint(nx, ny)
+                val ok = awaitGestureWithRetry { cb -> service.performTap(absX, absY, cb) }
                 ExecResult(ok, if (!ok) "Tap 失败" else null)
             }
             "Swipe" -> {
@@ -52,7 +54,7 @@ class AutoGlmActionExecutor(
                 val (absSx, absSy) = toAbsPoint(sx, sy)
                 val (absEx, absEy) = toAbsPoint(ex, ey)
                 val ok =
-                    awaitGesture { cb ->
+                    awaitGestureWithRetry { cb ->
                         service.performSwipe(
                             startX = absSx,
                             startY = absSy,
@@ -68,16 +70,16 @@ class AutoGlmActionExecutor(
                 val element = args["element"].orEmpty()
                 val (x, y) = parseRelativePoint(element) ?: return ExecResult(false, "Long Press 坐标无效：$element")
                 val (absX, absY) = toAbsPoint(x, y)
-                val ok = awaitGesture { cb -> service.performLongPress(absX, absY, cb) }
+                val ok = awaitGestureWithRetry { cb -> service.performLongPress(absX, absY, cb) }
                 ExecResult(ok, if (!ok) "Long Press 失败" else null)
             }
             "Double Tap" -> {
                 val element = args["element"].orEmpty()
                 val (x, y) = parseRelativePoint(element) ?: return ExecResult(false, "Double Tap 坐标无效：$element")
                 val (absX, absY) = toAbsPoint(x, y)
-                val ok1 = awaitGesture { cb -> service.performTap(absX, absY, cb) }
+                val ok1 = awaitGestureWithRetry { cb -> service.performTap(absX, absY, cb) }
                 Thread.sleep(80)
-                val ok2 = awaitGesture { cb -> service.performTap(absX, absY, cb) }
+                val ok2 = awaitGestureWithRetry { cb -> service.performTap(absX, absY, cb) }
                 ExecResult(ok1 && ok2, if (!(ok1 && ok2)) "Double Tap 失败" else null)
             }
             "Type", "Type_Name" -> {
@@ -108,31 +110,58 @@ class AutoGlmActionExecutor(
 
     private fun inputText(service: OperitAccessibilityService, text: String, onLog: (String) -> Unit): Boolean {
         val root = service.rootInActiveWindow ?: return false
-        val target = findFirstEditable(root)
+        val target = findEditableTarget(root)
         if (target == null) {
             onLog("未找到可输入控件（EditText）")
             return false
         }
-        target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
-        val args = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text) }
-        val ok = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-        if (!ok) onLog("输入失败（ACTION_SET_TEXT 返回 false）")
-        return ok
+
+        // 1) 优先使用 ACTION_SET_TEXT（支持的控件最稳定）
+        runCatching { target.performAction(AccessibilityNodeInfo.ACTION_FOCUS) }
+        val setTextArgs = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text) }
+        val okSetText = runCatching { target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, setTextArgs) }.getOrNull() == true
+        if (okSetText) return true
+
+        // 2) 兼容不支持 ACTION_SET_TEXT 的控件：尝试剪贴板粘贴
+        val cm = context.getSystemService(ClipboardManager::class.java)
+        if (cm == null) {
+            onLog("输入失败：无法获取 ClipboardManager（ACTION_SET_TEXT 失败且无法走粘贴兜底）")
+            return false
+        }
+        runCatching {
+            cm.setPrimaryClip(ClipData.newPlainText("AutoGLM", text))
+        }.onFailure { e ->
+            onLog("输入失败：写入剪贴板失败：${e.message ?: e.javaClass.simpleName}")
+            return false
+        }
+
+        runCatching { target.performAction(AccessibilityNodeInfo.ACTION_FOCUS) }
+        runCatching { target.performAction(AccessibilityNodeInfo.ACTION_SELECT_ALL) }
+        val okPaste = runCatching { target.performAction(AccessibilityNodeInfo.ACTION_PASTE) }.getOrNull() == true
+        if (okPaste) return true
+
+        onLog("输入失败（ACTION_SET_TEXT/ACTION_PASTE 均失败）")
+        return false
     }
 
-    private fun findFirstEditable(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+    private fun findEditableTarget(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         val queue = ArrayDeque<AccessibilityNodeInfo>()
         queue.add(node)
+        var fallback: AccessibilityNodeInfo? = null
         while (queue.isNotEmpty()) {
             val cur = queue.removeFirst()
-            if (cur.isEditable || cur.className?.toString() == "android.widget.EditText") {
+            val isEdit = cur.isEditable || cur.className?.toString() == "android.widget.EditText"
+            if (isEdit && cur.isFocused) {
                 return cur
+            }
+            if (fallback == null && isEdit) {
+                fallback = cur
             }
             for (i in 0 until cur.childCount) {
                 cur.getChild(i)?.let { queue.add(it) }
             }
         }
-        return null
+        return fallback
     }
 
     private fun awaitGesture(start: ((Boolean) -> Unit) -> Unit): Boolean {
@@ -142,22 +171,44 @@ class AutoGlmActionExecutor(
             ok = success
             latch.countDown()
         }
-        return latch.await(5, TimeUnit.SECONDS) && ok
+        return latch.await(7, TimeUnit.SECONDS) && ok
     }
 
-    private fun parseRelativePoint(value: String): Pair<Int, Int>? {
-        val parts = value.trim().removeSurrounding("[", "]").split(",").map { it.trim() }
+    private fun awaitGestureWithRetry(start: ((Boolean) -> Unit) -> Unit): Boolean {
+        val first = awaitGesture(start)
+        if (first) return true
+        Thread.sleep(250)
+        return awaitGesture(start)
+    }
+
+    /**
+     * 支持两种坐标写法：
+     * - [x,y]，其中 x/y 为 0~999（或 0~1000）的整数
+     * - [0.5,0.7]，其中 x/y 为 0~1 的小数（表示比例）
+     *
+     * 返回归一化后的坐标 (0~1)。
+     */
+    private fun parseRelativePoint(value: String): Pair<Double, Double>? {
+        val raw = value.trim().removeSurrounding("[", "]")
+        val parts = raw.split(",").map { it.trim() }.filter { it.isNotBlank() }
         if (parts.size < 2) return null
-        val relX = parts[0].toIntOrNull() ?: return null
-        val relY = parts[1].toIntOrNull() ?: return null
-        return relX to relY
+        val x = parts[0].toDoubleOrNull() ?: return null
+        val y = parts[1].toDoubleOrNull() ?: return null
+
+        val isRatio = x in 0.0..1.0 && y in 0.0..1.0
+        if (isRatio) return x to y
+
+        // Prompt 里是 0..999，但模型有时会输出 1000，这里兼容一下。
+        val denom = 999.0
+        val nx = (x.coerceIn(0.0, 1000.0).coerceAtMost(999.0)) / denom
+        val ny = (y.coerceIn(0.0, 1000.0).coerceAtMost(999.0)) / denom
+        return nx to ny
     }
 
-    private fun toAbsPoint(relX: Int, relY: Int): Pair<Float, Float> {
+    private fun toAbsPoint(normX: Double, normY: Double): Pair<Float, Float> {
         val dm = context.resources.displayMetrics
-        // AutoGLM 坐标通常按 0~1000 归一化（和 Operit 保持一致）
-        val x = (relX.coerceIn(0, 1000) / 1000f) * dm.widthPixels
-        val y = (relY.coerceIn(0, 1000) / 1000f) * dm.heightPixels
+        val x = (normX.coerceIn(0.0, 1.0) * dm.widthPixels).toFloat()
+        val y = (normY.coerceIn(0.0, 1.0) * dm.heightPixels).toFloat()
         return x to y
     }
 
