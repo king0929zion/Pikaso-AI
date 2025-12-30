@@ -136,7 +136,16 @@ class AutoGlmActionExecutor(
         }
 
         runCatching { target.performAction(AccessibilityNodeInfo.ACTION_FOCUS) }
-        runCatching { target.performAction(AccessibilityNodeInfo.ACTION_SELECT_ALL) }
+        runCatching {
+            val current = target.text?.toString().orEmpty()
+            val end = current.length.coerceAtLeast(0)
+            val selArgs =
+                Bundle().apply {
+                    putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0)
+                    putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end)
+                }
+            target.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, selArgs)
+        }
         val okPaste = runCatching { target.performAction(AccessibilityNodeInfo.ACTION_PASTE) }.getOrNull() == true
         if (okPaste) return true
 
