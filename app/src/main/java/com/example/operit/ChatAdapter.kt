@@ -79,7 +79,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun getItemCount() = items.size
 
-    class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
 
         fun bind(message: Item.Text) {
@@ -101,7 +101,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    class CardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class CardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvSubtitle: TextView = itemView.findViewById(R.id.tvSubtitle)
         private val btnPrimary: MaterialButton = itemView.findViewById(R.id.btnPrimary)
@@ -129,4 +129,3 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 }
-
