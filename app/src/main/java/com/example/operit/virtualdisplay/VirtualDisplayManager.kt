@@ -2,15 +2,17 @@ package com.example.operit.virtualdisplay
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.ImageFormat
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.Image
 import android.media.ImageReader
 import android.util.DisplayMetrics
-import android.util.Log
+import android.view.Display
 import android.view.Surface
 import android.view.WindowManager
+import com.example.operit.logging.AppLog
 import java.io.File
 import java.io.FileOutputStream
 
@@ -38,18 +40,20 @@ class VirtualDisplayManager private constructor(private val context: Context) {
 
     fun getDisplayId(): Int? = displayId
 
+    fun getDisplay(): Display? = virtualDisplay?.display
+
     fun release() {
         try {
             virtualDisplay?.release()
         } catch (e: Exception) {
-            Log.e(TAG, "Error releasing virtual display", e)
+            AppLog.e(TAG, "释放虚拟屏幕失败", e)
         }
         virtualDisplay = null
 
         try {
             imageReader?.close()
         } catch (e: Exception) {
-            Log.e(TAG, "Error closing ImageReader", e)
+            AppLog.e(TAG, "关闭 ImageReader 失败", e)
         }
         imageReader = null
         displayId = null
@@ -84,7 +88,7 @@ class VirtualDisplayManager private constructor(private val context: Context) {
             }
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error capturing virtual display frame", e)
+            AppLog.e(TAG, "截图虚拟屏幕帧失败", e)
             false
         } finally {
             try {
@@ -107,13 +111,18 @@ class VirtualDisplayManager private constructor(private val context: Context) {
             val height = metrics.heightPixels.coerceAtLeast(1)
             val densityDpi = metrics.densityDpi
 
-            val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+            // 注意：PUBLIC flag 在普通应用上可能触发创建失败（权限限制），这里仅保留 PRESENTATION 以便展示/调试。
+            val reader =
+                try {
+                    ImageReader.newInstance(width, height, ImageFormat.FLEX_RGBA_8888, 2)
+                } catch (_: Throwable) {
+                    ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+                }
             imageReader = reader
             val surface: Surface = reader.surface
 
             val flags =
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC or
-                    DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
 
             val vd =
                 displayManager.createVirtualDisplay(
@@ -129,12 +138,11 @@ class VirtualDisplayManager private constructor(private val context: Context) {
             val id = vd.display?.displayId
             displayId = id
 
-            Log.d(TAG, "Created virtual display id=$id, size=${width}x$height, density=$densityDpi")
+            AppLog.i(TAG, "已创建虚拟屏幕 id=$id, size=${width}x$height, density=$densityDpi")
             id
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create virtual display", e)
+            AppLog.e(TAG, "创建虚拟屏幕失败", e)
             null
         }
     }
 }
-

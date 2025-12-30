@@ -48,14 +48,11 @@ class AutoGlmVisionClient(
                     .put(JSONObject().put("type", "text").put("text", userText.trim()))
             messages.put(JSONObject().put("role", "user").put("content", userContent))
 
-            val body = JSONObject()
-            body.put("model", settings.model)
-            // 对齐 Open-AutoGLM：autoglm-phone 默认走 stream=true（SSE）
-            body.put("stream", isAutoGlm)
-            body.put("messages", messages)
-
-            body.put("temperature", settings.temperature.toDouble())
-            body.put("top_p", settings.topP.toDouble())
+            val base = JSONObject()
+            base.put("model", settings.model)
+            base.put("messages", messages)
+            base.put("temperature", settings.temperature.toDouble())
+            base.put("top_p", settings.topP.toDouble())
 
             if (isAutoGlm) {
                 val maxTokens =
@@ -63,37 +60,85 @@ class AutoGlmVisionClient(
                         .takeIf { it > 0 }
                         ?.coerceIn(1, 8192)
                         ?: 3000
-                body.put("max_tokens", maxTokens)
-                body.put("frequency_penalty", 0.2)
+                base.put("max_tokens", maxTokens)
+                base.put("frequency_penalty", 0.2)
             } else {
-                body.put("max_tokens", settings.maxTokens)
+                base.put("max_tokens", settings.maxTokens)
             }
 
-            val requestBuilder =
-                Request.Builder()
-                    .url(endpoint)
-                    .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
-
-            val apiKey = settings.apiKey.trim()
-            if (apiKey.isNotEmpty()) requestBuilder.header("Authorization", "Bearer $apiKey")
-
-            AppLog.d("AutoGLM", "request endpoint=$endpoint model=${settings.model} body=${sanitizeForLog(body)}")
-
-            httpClient.newCall(requestBuilder.build()).execute().use { resp ->
-                if (!resp.isSuccessful) {
-                    val raw = resp.body?.string().orEmpty()
-                    val detail = decodeErrorDetail(raw)
-                    throw IOException("HTTP ${resp.code}: ${detail.ifBlank { raw }}")
-                }
-
-                if (isAutoGlm && body.optBoolean("stream", false)) {
-                    decodeContentFromSse(resp)
+            val attempts =
+                if (!isAutoGlm) {
+                    listOf(Attempt("default", base.put("stream", false) as JSONObject))
                 } else {
-                    val raw = resp.body?.string().orEmpty()
-                    decodeContent(raw)
+                    listOf(
+                        Attempt("autoglm_stream_true", JSONObject(base.toString()).put("stream", true)),
+                        Attempt("autoglm_stream_false", JSONObject(base.toString()).put("stream", false)),
+                        // 部分网关对参数更严格：再尝试去掉温度/TopP
+                        Attempt(
+                            "autoglm_minimal",
+                            JSONObject(base.toString())
+                                .remove("temperature")
+                                .remove("top_p")
+                                .put("stream", false),
+                        ),
+                    )
                 }
+
+            var lastError: Throwable? = null
+            for (attempt in attempts) {
+                try {
+                    return@runCatching executeOnce(endpoint, settings, attempt)
+                } catch (e: Throwable) {
+                    lastError = e
+                    if (!shouldRetry(e)) throw e
+                    AppLog.w("AutoGLM", "attempt failed name=${attempt.name} err=${e.message ?: e.javaClass.simpleName}")
+                }
+            }
+
+            throw (lastError ?: IllegalStateException("模型调用失败：未知错误"))
+        }
+    }
+
+    private data class Attempt(val name: String, val body: JSONObject)
+
+    private fun executeOnce(endpoint: String, settings: AiSettings, attempt: Attempt): String {
+        val requestBuilder =
+            Request.Builder()
+                .url(endpoint)
+                .post(attempt.body.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+
+        val apiKey = settings.apiKey.trim()
+        if (apiKey.isNotEmpty()) requestBuilder.header("Authorization", "Bearer $apiKey")
+
+        if (attempt.body.optBoolean("stream", false)) {
+            requestBuilder.header("Accept", "text/event-stream")
+            requestBuilder.header("Cache-Control", "no-cache")
+        }
+
+        AppLog.d(
+            "AutoGLM",
+            "request attempt=${attempt.name} endpoint=$endpoint model=${settings.model} body=${sanitizeForLog(attempt.body)}",
+        )
+
+        httpClient.newCall(requestBuilder.build()).execute().use { resp ->
+            if (!resp.isSuccessful) {
+                val raw = resp.body?.string().orEmpty()
+                val detail = decodeErrorDetail(raw)
+                throw IOException("HTTP ${resp.code}: ${detail.ifBlank { raw }}")
+            }
+
+            return if (attempt.body.optBoolean("stream", false)) {
+                decodeContentFromSse(resp)
+            } else {
+                val raw = resp.body?.string().orEmpty()
+                decodeContent(raw)
             }
         }
+    }
+
+    private fun shouldRetry(e: Throwable): Boolean {
+        val msg = e.message.orEmpty()
+        return msg.contains("1210") || msg.contains("API 调用参数有误") || msg.contains("API调用参数有误")
     }
 
     private fun sanitizeForLog(body: JSONObject): String {

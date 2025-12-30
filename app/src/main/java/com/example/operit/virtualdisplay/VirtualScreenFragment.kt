@@ -19,6 +19,7 @@ import java.util.Locale
 
 class VirtualScreenFragment : Fragment() {
     private val manager by lazy { VirtualDisplayManager.getInstance(requireContext()) }
+    private var presentation: VirtualScreenPresentation? = null
 
     private lateinit var tvStatus: TextView
     private lateinit var tvLastCapture: TextView
@@ -58,11 +59,13 @@ class VirtualScreenFragment : Fragment() {
                 Toast.makeText(requireContext(), "创建虚拟屏幕失败", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "已创建虚拟屏幕：id=$id", Toast.LENGTH_SHORT).show()
+                showPresentationIfPossible()
             }
             refreshUi()
         }
 
         btnRelease.setOnClickListener {
+            dismissPresentation()
             manager.release()
             Toast.makeText(requireContext(), "已释放虚拟屏幕", Toast.LENGTH_SHORT).show()
             refreshUi()
@@ -79,6 +82,7 @@ class VirtualScreenFragment : Fragment() {
 
     override fun onDestroyView() {
         stopAutoPreview()
+        dismissPresentation()
         super.onDestroyView()
         // 不在这里自动 release：便于后续被 AutoGLM/工具复用
     }
@@ -108,6 +112,8 @@ class VirtualScreenFragment : Fragment() {
             refreshUi()
             return
         }
+        // 确保虚拟屏幕上有内容渲染，否则可能一直拿不到帧
+        showPresentationIfPossible()
 
         val file = File(ctx.cacheDir, "virtual_display_latest.png")
         btnCapture.isEnabled = false
@@ -213,5 +219,19 @@ class VirtualScreenFragment : Fragment() {
         if (this::btnRealAuto.isInitialized) {
             activity?.runOnUiThread { refreshUi() }
         }
+    }
+
+    private fun showPresentationIfPossible() {
+        if (presentation?.isShowing == true) return
+        val display = manager.getDisplay() ?: return
+        val ctx = activity ?: return
+        runCatching {
+            presentation = VirtualScreenPresentation(ctx, display).also { it.show() }
+        }
+    }
+
+    private fun dismissPresentation() {
+        runCatching { presentation?.dismiss() }
+        presentation = null
     }
 }

@@ -97,8 +97,42 @@ object ShizukuScreencap {
     }
 
     private fun buildAutoGlmDataUrl(rawPngBytes: ByteArray): Triple<String, ByteArray, String> {
-        val b64 = Base64.encodeToString(rawPngBytes, Base64.NO_WRAP)
-        return Triple("data:image/png;base64,$b64", rawPngBytes, "image/png")
+        // 尽量保持与官方一致：PNG + data:image/png;base64
+        // 同时对极端大图做一次“缩放后仍为 PNG”的压缩，避免触发服务端请求体限制导致 400/1210。
+        val targetMaxBytes = 3_200_000
+        var bytes = rawPngBytes
+
+        if (bytes.size > targetMaxBytes) {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            val srcW = bounds.outWidth
+            val srcH = bounds.outHeight
+            if (srcW > 0 && srcH > 0) {
+                fun calcInSampleSize(maxEdge: Int): Int {
+                    var sample = 1
+                    while (srcW / sample > maxEdge || srcH / sample > maxEdge) {
+                        sample *= 2
+                    }
+                    return sample.coerceAtLeast(1)
+                }
+
+                val decodeOpts =
+                    BitmapFactory.Options().apply {
+                        inSampleSize = calcInSampleSize(1280)
+                        inPreferredConfig = Bitmap.Config.RGB_565
+                    }
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOpts)
+                if (bmp != null) {
+                    val baos = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                    bytes = baos.toByteArray()
+                    runCatching { bmp.recycle() }
+                }
+            }
+        }
+
+        val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+        return Triple("data:image/png;base64,$b64", bytes, "image/png")
     }
 
     private fun buildCompactDataUrl(file: File, rawBytes: ByteArray): Triple<String, ByteArray, String> {
