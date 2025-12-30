@@ -18,7 +18,7 @@ object ShizukuScreencap {
         return runCatching {
             if (!isReady()) error("Shizuku 未授权或未运行")
 
-            val proc = Shizuku.newProcess(arrayOf("sh", "-c", "screencap -p"), null, null)
+            val proc = newProcess(arrayOf("sh", "-c", "screencap -p"))
             val baos = ByteArrayOutputStream()
             proc.inputStream.use { input ->
                 val buf = ByteArray(8192)
@@ -41,5 +41,19 @@ object ShizukuScreencap {
             val dataUrl = "data:image/png;base64,$b64"
             CaptureResult(pngBytes = bytes, dataUrl = dataUrl)
         }
+    }
+
+    private fun newProcess(cmd: Array<String>): Process {
+        // Shizuku 13+ 将 newProcess 设为 private，但仍可通过反射调用（返回 Process）。
+        val m =
+            Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java,
+            )
+        m.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        return m.invoke(null, cmd, null, null) as Process
     }
 }
