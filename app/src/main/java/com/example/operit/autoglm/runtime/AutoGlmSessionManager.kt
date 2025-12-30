@@ -1,8 +1,6 @@
 package com.example.operit.autoglm.runtime
 
 import android.content.Context
-import android.provider.Settings
-import com.example.operit.accessibility.AccessibilityStatus
 import com.example.operit.ai.AiPreferences
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
@@ -38,9 +36,6 @@ object AutoGlmSessionManager {
         if (task.isBlank()) {
             return JSONObject().put("ok", false).put("error", "任务为空")
         }
-        if (!AccessibilityStatus.isServiceEnabled(ctx)) {
-            return JSONObject().put("ok", false).put("error", "无障碍未开启")
-        }
         if (!ShizukuScreencap.isReady()) {
             return JSONObject().put("ok", false).put("error", "Shizuku 未授权或未运行（AutoGLM 需要截图）")
         }
@@ -63,16 +58,17 @@ object AutoGlmSessionManager {
             }
         }
 
-        // 尝试拉起虚拟屏幕悬浮窗（不作为硬性依赖）
-        if (Settings.canDrawOverlays(ctx)) {
-            runCatching { ShowerVirtualScreenOverlay.show(ctx) }
-                .onSuccess { appendLog("已启动虚拟屏幕悬浮窗（Shower）") }
-                .onFailure { e ->
-                    AppLog.w("AutoGLM", "failed to show shower overlay: ${e.message}")
-                    appendLog("虚拟屏幕悬浮窗启动失败：${e.message ?: e.javaClass.simpleName}")
-                }
-        } else {
-            appendLog("未授予悬浮窗权限：无法显示虚拟屏幕预览（可在 权限配置 中开启）")
+        // 每次启动任务都创建/重建虚拟屏幕（Shower）
+        runCatching {
+            val ok = AutoGlmVirtualScreen.ensureCreated(ctx, onLog = ::appendLog)
+            if (!ok) {
+                appendLog("提示：虚拟屏幕未就绪，后续将回退到真实屏幕截图/无障碍执行")
+            }
+            // 如果用户已授予悬浮窗权限，则自动显示“虚拟屏幕（悬浮窗）”方便查看 AI 当前操作画面
+            ShowerVirtualScreenOverlay.show(ctx)
+        }.onFailure { e ->
+            AppLog.w("AutoGLM", "ensure virtual screen failed: ${e.message}")
+            appendLog("虚拟屏幕初始化异常：${e.message ?: e.javaClass.simpleName}")
         }
 
         val runner =

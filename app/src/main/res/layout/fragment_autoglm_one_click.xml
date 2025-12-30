@@ -36,7 +36,7 @@
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/md_theme_light_surfaceVariant"
-                app:strokeWidth="1dp"
+                app:strokeWidth="0dp"
                 app:cardBackgroundColor="@color/md_theme_light_surface">
 
                 <LinearLayout
@@ -78,7 +78,7 @@
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/md_theme_light_surfaceVariant"
-                app:strokeWidth="1dp"
+                app:strokeWidth="0dp"
                 app:cardBackgroundColor="@color/md_theme_light_surface">
 
                 <LinearLayout
@@ -142,7 +142,7 @@
                 app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/md_theme_light_surfaceVariant"
-                app:strokeWidth="1dp"
+                app:strokeWidth="0dp"
                 app:cardBackgroundColor="@color/md_theme_light_surface">
 
                 <TextView

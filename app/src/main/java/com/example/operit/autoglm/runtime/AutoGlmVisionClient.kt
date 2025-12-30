@@ -4,6 +4,7 @@ import com.example.operit.ai.AiSettings
 import com.example.operit.ai.EndpointCompleter
 import com.example.operit.logging.AppLog
 import java.io.IOException
+import kotlin.math.round
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -21,6 +22,16 @@ class AutoGlmVisionClient(
             .writeTimeout(60, TimeUnit.SECONDS)
             .build(),
 ) {
+    private fun round2(value: Float): Double {
+        if (!value.isFinite()) return 0.0
+        val v = value.toDouble()
+        return round(v * 100.0) / 100.0
+    }
+
+    private fun clampTemperature(value: Float): Double = round2(value).coerceIn(0.0, 1.0)
+
+    private fun clampTopP(value: Float): Double = round2(value).coerceIn(0.01, 1.0)
+
     private fun isAutoGlmModel(model: String): Boolean {
         val m = model.trim().lowercase()
         return m == "autoglm-phone" || m.startsWith("autoglm-")
@@ -40,9 +51,9 @@ class AutoGlmVisionClient(
             val originalImage = imageDataUrl.trim()
             val baseBodies =
                 buildList {
-                    add(buildBaseBody(settings, systemPrompt, userText, normalizedImage))
+                    add(buildBaseBody(settings, systemPrompt, userText, normalizedImage, isAutoGlm))
                     if (normalizedImage != originalImage) {
-                        add(buildBaseBody(settings, systemPrompt, userText, originalImage))
+                        add(buildBaseBody(settings, systemPrompt, userText, originalImage, isAutoGlm))
                     }
                 }
 
@@ -53,7 +64,7 @@ class AutoGlmVisionClient(
                     val maxTokens =
                         settings.maxTokens
                             .takeIf { it > 0 }
-                            ?.coerceIn(1, 8192)
+                            ?.coerceIn(1, 4096)
                             ?: 3000
 
                     baseBodies.flatMapIndexed { idx, base0 ->
@@ -62,6 +73,9 @@ class AutoGlmVisionClient(
                             JSONObject(base.toString()).apply {
                                 remove("temperature")
                                 remove("top_p")
+                                remove("do_sample")
+                                put("do_sample", false)
+                                put("temperature", 0.0)
                                 put("stream", false)
                             }
                         val suffix = if (idx == 0) "normalized" else "original"
@@ -258,6 +272,7 @@ class AutoGlmVisionClient(
         systemPrompt: String,
         userText: String,
         imageUrl: String,
+        isAutoGlm: Boolean,
     ): JSONObject {
         val messages = JSONArray()
 
@@ -268,16 +283,23 @@ class AutoGlmVisionClient(
 
         val userContent =
             JSONArray()
-                .put(JSONObject().put("type", "text").put("text", userText.trim()))
                 .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", imageUrl)))
+                .put(JSONObject().put("type", "text").put("text", userText.trim()))
         messages.put(JSONObject().put("role", "user").put("content", userContent))
 
         return JSONObject().apply {
             put("model", settings.model)
             put("messages", messages)
-            put("temperature", settings.temperature.toDouble())
-            put("top_p", settings.topP.toDouble())
-            put("max_tokens", settings.maxTokens)
+            if (isAutoGlm) {
+                // AutoGLM-Phone：按官方默认值与范围规范化，避免 1210（参数错误）
+                put("do_sample", false)
+                put("temperature", 0.0)
+                put("top_p", 0.85)
+            } else {
+                put("temperature", clampTemperature(settings.temperature))
+                put("top_p", clampTopP(settings.topP))
+            }
+            settings.maxTokens.takeIf { it > 0 }?.let { put("max_tokens", it) }
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.example.operit.autoglm.runtime
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.util.Base64
 import com.example.operit.ai.AiSettings
 import com.example.operit.autoglm.agent.AutoGlmAgentAction
 import com.example.operit.autoglm.agent.AutoGlmAgentParser
@@ -8,8 +10,11 @@ import com.example.operit.autoglm.agent.AutoGlmAgentPrompts
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
 import java.text.SimpleDateFormat
+import java.io.File
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class AutoGlmAgentRunner(
     private val context: Context,
@@ -33,6 +38,12 @@ class AutoGlmAgentRunner(
             if (task.isBlank()) error("任务为空")
             if (!ShizukuScreencap.isReady()) error("需要 Shizuku 权限（用于截图）")
 
+            onLog("准备虚拟屏幕（Shower）…")
+            val virtualOk = AutoGlmVirtualScreen.ensureCreated(context, onLog = onLog)
+            if (!virtualOk) {
+                onLog("虚拟屏幕创建失败：将回退到真实屏幕截图/无障碍执行")
+            }
+
             val systemPrompt = AutoGlmAgentPrompts.buildUiAutomationSystemPrompt()
 
             var lastExecSummary = ""
@@ -42,13 +53,7 @@ class AutoGlmAgentRunner(
                 onLog("--------------------------------------------------")
                 onLog("Step $step/$maxSteps：截图 -> 规划 -> 执行")
 
-                val capture =
-                    ShizukuScreencap.capture(
-                        context = context,
-                        mode = ShizukuScreencap.CaptureMode.AUTOGLM_PNG,
-                    ).getOrElse { e ->
-                        throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
-                    }
+                val capture = captureForAutoGlm()
                 onScreenshot?.invoke(capture.screenshotFile.absolutePath)
                 val w = capture.width ?: -1
                 val h = capture.height ?: -1
@@ -114,6 +119,64 @@ class AutoGlmAgentRunner(
         }.onFailure { e ->
             AppLog.e("AutoGLM", "agent run failed", e)
         }
+    }
+
+    private data class Capture(
+        val screenshotFile: File,
+        val imageBytes: ByteArray,
+        val dataUrl: String,
+        val width: Int?,
+        val height: Int?,
+        val mimeType: String,
+    )
+
+    private fun captureForAutoGlm(): Capture {
+        // 优先使用虚拟屏幕截图；如果虚拟屏幕未就绪则回退到真实屏幕（Shizuku screencap）
+        if (AutoGlmVirtualScreen.isReady()) {
+            val bytes =
+                runBlocking(Dispatchers.IO) {
+                    runCatching { com.ai.assistance.showerclient.ShowerController.requestScreenshot(4000L) }.getOrNull()
+                }
+            if (bytes != null && bytes.isNotEmpty()) {
+                val dir = File(context.cacheDir, "autoglm/virtual")
+                dir.mkdirs()
+                val file = File(dir, "virtual_latest.png")
+                runCatching { file.writeBytes(bytes) }
+
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                val width = bounds.outWidth.takeIf { it > 0 }
+                val height = bounds.outHeight.takeIf { it > 0 }
+
+                val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                return Capture(
+                    screenshotFile = file,
+                    imageBytes = bytes,
+                    dataUrl = "data:image/png;base64,$b64",
+                    width = width,
+                    height = height,
+                    mimeType = "image/png",
+                )
+            } else {
+                onLog("虚拟屏幕截图失败：回退到真实屏幕截图")
+            }
+        }
+
+        val real =
+            ShizukuScreencap.capture(
+                context = context,
+                mode = ShizukuScreencap.CaptureMode.AUTOGLM_PNG,
+            ).getOrElse { e ->
+                throw IllegalStateException("截图失败：${e.message ?: e.javaClass.simpleName}", e)
+            }
+        return Capture(
+            screenshotFile = real.screenshotFile,
+            imageBytes = real.imageBytes,
+            dataUrl = real.dataUrl,
+            width = real.width,
+            height = real.height,
+            mimeType = real.mimeType,
+        )
     }
 
     private fun buildUserText(

@@ -1,5 +1,7 @@
 package com.example.operit
 
+import android.content.Context
+import android.content.Intent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.view.LayoutInflater
@@ -8,45 +10,79 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.markdown.MarkdownRenderer
+import com.example.operit.virtualdisplay.shower.ShowerViewerActivity
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 
 class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val messages = mutableListOf<Message>()
+    private sealed interface Item {
+        data class Text(val text: String, val isUser: Boolean) : Item
+
+        data class Card(
+            val title: String,
+            val subtitle: String,
+            val action: CardAction,
+        ) : Item
+    }
+
+    enum class CardAction {
+        OPEN_SHOWER_VIEWER,
+    }
 
     data class Message(val text: String, val isUser: Boolean)
 
+    private val items = mutableListOf<Item>()
+
     fun addMessage(message: Message): Int {
-        messages.add(message)
-        notifyItemInserted(messages.size - 1)
-        return messages.size - 1
+        items.add(Item.Text(message.text, message.isUser))
+        notifyItemInserted(items.size - 1)
+        return items.size - 1
+    }
+
+    fun addCard(title: String, subtitle: String, action: CardAction): Int {
+        items.add(Item.Card(title = title, subtitle = subtitle, action = action))
+        notifyItemInserted(items.size - 1)
+        return items.size - 1
     }
 
     fun updateMessage(position: Int, newText: String) {
-        if (position < 0 || position >= messages.size) return
-        messages[position] = messages[position].copy(text = newText)
+        if (position < 0 || position >= items.size) return
+        val old = items[position]
+        if (old !is Item.Text) return
+        items[position] = old.copy(text = newText)
         notifyItemChanged(position)
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (messages[position].isUser) 1 else 0
+        return when (items[position]) {
+            is Item.Text -> if ((items[position] as Item.Text).isUser) 1 else 0
+            is Item.Card -> 2
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val layout = if (viewType == 1) R.layout.item_chat_user else R.layout.item_chat_ai
-        val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
-        return MessageViewHolder(view)
+        val inflater = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            0 -> MessageViewHolder(inflater.inflate(R.layout.item_chat_ai, parent, false))
+            1 -> MessageViewHolder(inflater.inflate(R.layout.item_chat_user, parent, false))
+            else -> CardViewHolder(inflater.inflate(R.layout.item_chat_card, parent, false))
+        }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as MessageViewHolder).bind(messages[position])
+        when (val item = items[position]) {
+            is Item.Text -> (holder as MessageViewHolder).bind(item)
+            is Item.Card -> (holder as CardViewHolder).bind(item)
+        }
     }
 
-    override fun getItemCount() = messages.size
+    override fun getItemCount() = items.size
 
     class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
-        fun bind(message: Message) {
+
+        fun bind(message: Item.Text) {
             if (message.isUser) {
                 tvMessage.text = message.text
             } else {
@@ -64,4 +100,33 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             }
         }
     }
+
+    class CardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
+        private val tvSubtitle: TextView = itemView.findViewById(R.id.tvSubtitle)
+        private val btnPrimary: MaterialButton = itemView.findViewById(R.id.btnPrimary)
+
+        fun bind(card: Item.Card) {
+            tvTitle.text = card.title
+            tvSubtitle.text = card.subtitle
+
+            val click = View.OnClickListener { v ->
+                val ctx = v.context
+                performAction(ctx, card.action)
+            }
+            itemView.setOnClickListener(click)
+            btnPrimary.setOnClickListener(click)
+        }
+
+        private fun performAction(context: Context, action: CardAction) {
+            when (action) {
+                CardAction.OPEN_SHOWER_VIEWER -> {
+                    val intent = Intent(context, ShowerViewerActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
 }
+

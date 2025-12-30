@@ -1,11 +1,12 @@
 package com.example.operit
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.view.KeyEvent
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -38,10 +39,9 @@ class ChatFragment : Fragment() {
     private val tools by lazy { ChatToolRegistry.defaultTools() }
 
     private val maxToolRounds = 8
-
     private var sessionId: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_chat, container, false)
     }
 
@@ -77,6 +77,7 @@ class ChatFragment : Fragment() {
                 false
             }
         }
+
         recyclerView.setOnTouchListener { _, event ->
             if (event.action == android.view.MotionEvent.ACTION_DOWN) {
                 input.clearFocus()
@@ -86,7 +87,6 @@ class ChatFragment : Fragment() {
         }
 
         updateSendingUi()
-
         ensureSessionLoaded()
     }
 
@@ -117,7 +117,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun hideKeyboard() {
-        val imm = context?.getSystemService(android.view.inputmethod.InputMethodManager::class.java) ?: return
+        val imm = context?.getSystemService(InputMethodManager::class.java) ?: return
         imm.hideSoftInputFromWindow(input.windowToken, 0)
     }
 
@@ -127,48 +127,32 @@ class ChatFragment : Fragment() {
         val ctx = context ?: return
         val store = ChatStore.get(ctx)
         val idFromArgs = arguments?.getString(ARG_SESSION_ID).orEmpty().trim()
-        val id =
-            if (idFromArgs.isNotBlank()) {
-                idFromArgs
-            } else {
-                store.createSession().id
-            }
+        val id = if (idFromArgs.isNotBlank()) idFromArgs else store.createSession().id
         sessionId = id
 
         val saved = store.loadMessages(id)
-        if (saved.isNotEmpty()) {
-            conversation.clear()
-            conversation.addAll(saved)
-            renderConversation()
-            emptyState.visibility = View.GONE
-        }
-    }
+        conversation.clear()
+        conversation.addAll(saved)
 
-    private fun renderConversation() {
-        conversation.forEach { m ->
+        // system/tool 不直接展示在对话列表里
+        saved.forEach { m ->
             when (m.role) {
                 "user" -> adapter.addMessage(ChatAdapter.Message(m.content.orEmpty(), true))
-                "assistant" -> {
-                    val text =
-                        when {
-                            !m.content.isNullOrBlank() -> m.content
-                            !m.toolCalls.isNullOrEmpty() -> "（正在调用工具…）"
-                            else -> "（无内容）"
-                        }
-                    adapter.addMessage(ChatAdapter.Message(text ?: "", false))
-                }
-                // system/tool 不直接展示在对话列表里
+                "assistant" -> adapter.addMessage(ChatAdapter.Message(m.content.orEmpty(), false))
             }
         }
         recyclerView.scrollToPosition((adapter.itemCount - 1).coerceAtLeast(0))
+        emptyState.visibility = if (adapter.itemCount == 0) View.VISIBLE else View.GONE
     }
 
     private fun persistAsync() {
         val ctx = context ?: return
         val id = sessionId ?: return
-        val snapshot = conversation.toList()
+        val messagesSnapshot = conversation.toList()
         Thread {
-            runCatching { ChatStore.get(ctx).saveMessages(id, snapshot) }
+            runCatching {
+                ChatStore.get(ctx).saveMessages(id, messagesSnapshot)
+            }
             activity?.runOnUiThread {
                 (activity as? MainActivity)?.refreshHistory()
             }
@@ -176,9 +160,9 @@ class ChatFragment : Fragment() {
     }
 
     private fun sendMessage(text: String) {
-        if (isSending) return
+        if (text.isBlank()) return
 
-        if (emptyState.visibility == View.VISIBLE) {
+        if (adapter.itemCount == 0) {
             emptyState.visibility = View.GONE
         }
         adapter.addMessage(ChatAdapter.Message(text, true))
@@ -202,21 +186,22 @@ class ChatFragment : Fragment() {
             val systemPromptBase = PromptPreferences.get(requireContext()).getChatSystemPrompt()
             val systemPrompt =
                 systemPromptBase +
-                    "\n\n你可以在需要时调用工具函数来操作应用内模块（脚本/日志/虚拟屏幕）。" +
-                    "对可能破坏性操作（如清空日志、覆盖脚本）应先向用户确认。" +
-                    "\n\n你也可以调用 AutoGLM 工具来执行跨应用的手机自动化任务：" +
-                    "先调用 autoglm_run(task=...) 获得 session_id，再用 autoglm_status(session_id=...) 获取进度/日志。" +
-                    "如需停止则调用 autoglm_cancel(session_id=...)。" +
-                    "\n重要：只有在 tool_calls 真实调用并返回结果后，才可以声称“已执行/已启动/已检查状态”。如果未调用工具，必须明确说明未发生任何实际操作。" +
-                    "涉及支付/隐私/删除等敏感步骤前必须先向用户二次确认。"
+                    "\n\n你可以在需要时调用工具函数来操作应用内模块（脚本/日志/虚拟屏幕等）。" +
+                    "对明显破坏性操作（如清空日志、覆盖脚本）再向用户确认即可。" +
+                    "\n\n你也可以调用 AutoGLM 工具执行跨应用的手机自动化任务：" +
+                    "先调用 autoglm_run(task=...) 获得 session_id；再用 autoglm_status(session_id=...) 轮询进度；" +
+                    "需要停止则调用 autoglm_cancel(session_id=...)." +
+                    "\n\n重要：当用户已经明确要求执行某个自动化任务时，默认视为已授权一般操作；" +
+                    "不要在每一步反复询问“是否允许”。仅当涉及支付/转账/删除/隐私授权等不可逆或敏感操作时，再进行一次确认。"
             conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
+
         conversation.add(OpenAiChatClient.Message(role = "user", content = text))
         persistAsync()
 
         isSending = true
         updateSendingUi()
-        currentPlaceholderPos = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+        currentPlaceholderPos = adapter.addMessage(ChatAdapter.Message("正在思考…", false))
         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
         runToolLoop(settings = settings, placeholderPos = currentPlaceholderPos ?: -1, round = 0)
@@ -254,20 +239,12 @@ class ChatFragment : Fragment() {
                                 persistAsync()
 
                                 val hasToolCalls = r.toolCalls.isNotEmpty()
-                                var contentToShow =
+                                val contentToShow =
                                     when {
                                         r.content.isNotBlank() -> r.content
-                                        hasToolCalls -> "正在调用工具..."
+                                        hasToolCalls -> "正在调用工具…"
                                         else -> "（无内容）"
                                     }
-                                if (!hasToolCalls && contentToShow.isNotBlank()) {
-                                    val suspicious =
-                                        Regex("""(?i)autoglm|session_id|tool|工具|已启动|启动了|正在执行|检查.*状态|已执行""")
-                                            .containsMatchIn(contentToShow)
-                                    if (suspicious) {
-                                        contentToShow += "\n\n（提示：未检测到 tool_calls，本次回复不会触发任何实际操作。）"
-                                    }
-                                }
                                 adapter.updateMessage(placeholderPos, contentToShow)
                                 recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
@@ -284,6 +261,7 @@ class ChatFragment : Fragment() {
                                 Thread {
                                     val toolMessages = ArrayList<OpenAiChatClient.Message>(r.toolCalls.size)
                                     val summary = StringBuilder()
+                                    var shouldAddVirtualScreenCard = false
 
                                     r.toolCalls.forEach { tc ->
                                         val toolResult =
@@ -294,6 +272,7 @@ class ChatFragment : Fragment() {
                                                         .put("error", e.message ?: e.javaClass.simpleName)
                                                         .toString()
                                                 }
+
                                         toolMessages.add(
                                             OpenAiChatClient.Message(
                                                 role = "tool",
@@ -302,6 +281,11 @@ class ChatFragment : Fragment() {
                                             ),
                                         )
                                         summary.append("【工具】").append(tc.name).append(" 已执行").append('\n')
+
+                                        if (tc.name == "autoglm_run") {
+                                            val ok = runCatching { JSONObject(toolResult).optBoolean("ok", false) }.getOrDefault(false)
+                                            if (ok) shouldAddVirtualScreenCard = true
+                                        }
                                     }
 
                                     activity?.runOnUiThread {
@@ -313,9 +297,18 @@ class ChatFragment : Fragment() {
                                         if (summary.isNotBlank()) {
                                             adapter.addMessage(ChatAdapter.Message(summary.toString().trimEnd(), false))
                                         }
+
+                                        if (shouldAddVirtualScreenCard) {
+                                            adapter.addCard(
+                                                title = "虚拟屏幕（AutoGLM）",
+                                                subtitle = "点击查看 AutoGLM 当前正在操作的页面",
+                                                action = ChatAdapter.CardAction.OPEN_SHOWER_VIEWER,
+                                            )
+                                        }
+
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
 
-                                        val nextPlaceholder = adapter.addMessage(ChatAdapter.Message("正在思考...", false))
+                                        val nextPlaceholder = adapter.addMessage(ChatAdapter.Message("正在思考…", false))
                                         currentPlaceholderPos = nextPlaceholder
                                         recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                                         runToolLoop(settings, nextPlaceholder, round + 1)
@@ -349,3 +342,4 @@ class ChatFragment : Fragment() {
         const val ARG_SESSION_ID = "session_id"
     }
 }
+
