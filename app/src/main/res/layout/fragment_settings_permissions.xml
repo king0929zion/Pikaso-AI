@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -8,14 +8,17 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground">
+        android:background="?android:attr/colorBackground"
+        app:liftOnScroll="false">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:title="权限配置"
-            app:navigationIcon="@drawable/ic_arrow_back" />
+            app:navigationIcon="@drawable/ic_arrow_back"
+            style="@style/Widget.Pikaso.Toolbar"/>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -29,529 +32,191 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="建议按顺序开启：无障碍 → Shizuku → 悬浮窗 → 电池优化 → 通知/存储/定位。"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="13sp"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Accessibility (Required) -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
+                style="@style/Widget.Pikaso.CardView.Large">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
+                    <!-- Accessibility -->
                     <LinearLayout
+                        android:id="@+id/itemAccessibility"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_accessibility"
+                            android:layout_marginEnd="16dp"
+                            app:tint="?attr/colorOnSurfaceVariant"/>
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="无障碍服务（必需）"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipAccessibilityStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="无障碍服务"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorOnSurface"/>
+                            <TextView
+                                android:id="@+id/tvAccessibilityStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="用于模拟点击和滑动"
+                                android:textSize="13sp"
+                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                        </LinearLayout>
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchAccessibility"
+                            style="@style/Widget.Pikaso.Switch"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未开启"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            android:layout_height="wrap_content"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="AutoGLM 执行链路依赖无障碍来执行点击/滑动/输入等操作。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
+                    <!-- Shizuku -->
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnAccessibility"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去开启" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Shizuku -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
+                        android:id="@+id/itemShizuku"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_adb"
+                            android:layout_marginEnd="16dp"
+                            app:tint="?attr/colorOnSurfaceVariant"/>
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Shizuku 权限（推荐）"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipShizukuStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Shizuku"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorOnSurface"/>
+                            <TextView
+                                android:id="@+id/tvShizukuStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="用于高级系统操作"
+                                android:textSize="13sp"
+                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                        </LinearLayout>
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchShizuku"
+                            style="@style/Widget.Pikaso.Switch"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未启动"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            android:layout_height="wrap_content"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="用于获得更强的系统能力（ADB 级），无需 Root。需要先启动 Shizuku 服务并授予权限。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
+                    <!-- Overlay -->
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnShizukuOpen"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="打开 Shizuku" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnShizukuRequest"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:layout_marginStart="12dp"
-                            android:text="请求权限" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Overlay -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
+                        android:id="@+id/itemOverlay"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_layers"
+                            android:layout_marginEnd="16dp"
+                            app:tint="?attr/colorOnSurfaceVariant"/>
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="悬浮窗权限"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipOverlayStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="悬浮窗权限"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorOnSurface"/>
+                            <TextView
+                                android:id="@+id/tvOverlayStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="用于显示虚拟屏幕 Overlay"
+                                android:textSize="13sp"
+                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                        </LinearLayout>
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchOverlay"
+                            style="@style/Widget.Pikaso.Switch"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未授权"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            android:layout_height="wrap_content"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="用于部分浮层提示/工具窗口（按需）。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
+                    <!-- Battery -->
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnOverlay"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去设置" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Battery -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
+                        android:id="@+id/itemBattery"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_battery_full"
+                            android:layout_marginEnd="16dp"
+                            app:tint="?attr/colorOnSurfaceVariant"/>
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="电池优化白名单"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipBatteryStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="忽略电池优化"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorOnSurface"/>
+                            <TextView
+                                android:id="@+id/tvBatteryStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="防止后台服务被杀"
+                                android:textSize="13sp"
+                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                        </LinearLayout>
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchBattery"
+                            style="@style/Widget.Pikaso.Switch"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未开启"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="避免后台执行时被系统限制/杀进程。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnBattery"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去设置" />
+                            android:layout_height="wrap_content"/>
                     </LinearLayout>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Notifications -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="通知权限"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipNotificationsStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未授权"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="用于任务状态、下载与系统提示。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnNotifications"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去授权" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Storage -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="存储权限"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipStorageStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未授权"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="用于导入/导出与文件读写（按需）。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnStorage"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去授权" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Location -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="定位权限"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipLocationStatus"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="未授权"
-                            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="用于部分系统能力（例如 Wi‑Fi 相关查询等）。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal"
-                        android:gravity="end">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnLocation"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minHeight="36dp"
-                            android:text="去授权" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="?attr/colorSurface">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="提示"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="无障碍属于敏感权限：请只在你信任的场景开启，并随时可在系统设置中关闭。"
-                        android:textSize="13sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

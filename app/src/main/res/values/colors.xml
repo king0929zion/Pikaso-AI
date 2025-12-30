@@ -2,9 +2,9 @@
 <resources>
     <color name="md_theme_light_primary">#2D2D2D</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
-    <color name="md_theme_light_primaryContainer">#FFFFFF</color> <!-- Not exactly matched, using surface for container if needed, or white -->
+    <color name="md_theme_light_primaryContainer">#FFFFFF</color>
     <color name="md_theme_light_onPrimaryContainer">#1C1C1C</color>
-    <color name="md_theme_light_secondary">#787674</color> <!-- Using outline as secondary fallback -->
+    <color name="md_theme_light_secondary">#787674</color>
     <color name="md_theme_light_onSecondary">#FFFFFF</color>
     <color name="md_theme_light_secondaryContainer">#DCC8C0</color>
     <color name="md_theme_light_onSecondaryContainer">#3E2620</color>
@@ -25,4 +25,9 @@
     <color name="md_theme_light_outline">#787674</color>
     <color name="md_theme_light_outlineVariant">#C4C7C5</color>
     <color name="md_theme_light_scrim">#000000</color>
+
+    <color name="switch_track">#787674</color>
+    <color name="switch_track_off">#787674</color>
+    <color name="switch_thumb">#FFFFFF</color>
+    <color name="switch_thumb_off">#EEEEEE</color>
 </resources>

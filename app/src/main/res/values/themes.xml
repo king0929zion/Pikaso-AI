@@ -35,12 +35,19 @@
         <item name="materialCardViewStyle">@style/Widget.Pikaso.CardView</item>
         <item name="materialButtonStyle">@style/Widget.Pikaso.Button</item>
         <item name="switchStyle">@style/Widget.Pikaso.Switch</item>
+        <item name="toolbarStyle">@style/Widget.Pikaso.Toolbar</item>
 
         <!-- Animation -->
         <item name="android:windowAnimationStyle">@style/Animation.Pikaso.Activity</item>
     </style>
 
-    <!-- CardView - Unified radius 16dp -->
+    <!-- Toolbar Style: Ensure text is dark on light background everywhere -->
+    <style name="Widget.Pikaso.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextColor">@color/md_theme_light_onBackground</item>
+        <item name="android:background">@color/md_theme_light_background</item>
+    </style>
+
+    <!-- CardView - Unified radius 16dp, No Stroke -->
     <style name="Widget.Pikaso.CardView" parent="Widget.Material3.CardView.Elevated">
         <item name="cardElevation">0dp</item>
         <item name="cardCornerRadius">@dimen/radius_medium</item>
