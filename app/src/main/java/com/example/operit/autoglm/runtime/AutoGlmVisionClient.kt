@@ -41,7 +41,7 @@ class AutoGlmVisionClient(
                                         JSONObject()
                                             .put("type", "image_url")
                                             .put("image_url", JSONObject().put("url", imageDataUrl)),
-                                    ),
+                                    )
                                     .put(JSONObject().put("type", "text").put("text", userText)),
                             ),
                     )
