@@ -19,8 +19,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.operit.accessibility.AccessibilityStatus
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.chip.Chip
 import com.google.android.material.switchmaterial.SwitchMaterial
 import rikka.shizuku.Shizuku
 
@@ -30,11 +28,19 @@ class SettingsPermissionsFragment : Fragment() {
     private lateinit var switchOverlay: SwitchMaterial
     private lateinit var switchBattery: SwitchMaterial
     private lateinit var switchShizuku: SwitchMaterial
+    private lateinit var switchNotifications: SwitchMaterial
+    private lateinit var switchLocation: SwitchMaterial
+    private lateinit var switchStorageRead: SwitchMaterial
+    private lateinit var switchAllFiles: SwitchMaterial
 
     private lateinit var tvAccessibilityStatus: TextView
     private lateinit var tvOverlayStatus: TextView
     private lateinit var tvBatteryStatus: TextView
     private lateinit var tvShizukuStatus: TextView
+    private lateinit var tvNotificationsStatus: TextView
+    private lateinit var tvLocationStatus: TextView
+    private lateinit var tvStorageReadStatus: TextView
+    private lateinit var tvAllFilesStatus: TextView
 
     private val shizukuPermissionListener =
         Shizuku.OnRequestPermissionResultListener { requestCode, _ ->
@@ -59,11 +65,19 @@ class SettingsPermissionsFragment : Fragment() {
         switchOverlay = view.findViewById(R.id.switchOverlay)
         switchBattery = view.findViewById(R.id.switchBattery)
         switchShizuku = view.findViewById(R.id.switchShizuku)
+        switchNotifications = view.findViewById(R.id.switchNotifications)
+        switchLocation = view.findViewById(R.id.switchLocation)
+        switchStorageRead = view.findViewById(R.id.switchStorageRead)
+        switchAllFiles = view.findViewById(R.id.switchAllFiles)
 
         tvAccessibilityStatus = view.findViewById(R.id.tvAccessibilityStatus)
         tvOverlayStatus = view.findViewById(R.id.tvOverlayStatus)
         tvBatteryStatus = view.findViewById(R.id.tvBatteryStatus)
         tvShizukuStatus = view.findViewById(R.id.tvShizukuStatus)
+        tvNotificationsStatus = view.findViewById(R.id.tvNotificationsStatus)
+        tvLocationStatus = view.findViewById(R.id.tvLocationStatus)
+        tvStorageReadStatus = view.findViewById(R.id.tvStorageReadStatus)
+        tvAllFilesStatus = view.findViewById(R.id.tvAllFilesStatus)
 
         // Accessibility
         view.findViewById<View>(R.id.itemAccessibility).setOnClickListener { openAccessibilitySettings() }
@@ -81,6 +95,22 @@ class SettingsPermissionsFragment : Fragment() {
         view.findViewById<View>(R.id.itemShizuku).setOnClickListener { handleShizukuClick() }
         switchShizuku.setOnClickListener { handleShizukuClick() }
 
+        // Notifications
+        view.findViewById<View>(R.id.itemNotifications).setOnClickListener { requestNotificationsPermission() }
+        switchNotifications.setOnClickListener { requestNotificationsPermission() }
+
+        // Location
+        view.findViewById<View>(R.id.itemLocation).setOnClickListener { requestLocationPermission() }
+        switchLocation.setOnClickListener { requestLocationPermission() }
+
+        // Storage read (images / external)
+        view.findViewById<View>(R.id.itemStorageRead).setOnClickListener { requestStorageReadPermission() }
+        switchStorageRead.setOnClickListener { requestStorageReadPermission() }
+
+        // All files access (special access)
+        view.findViewById<View>(R.id.itemAllFiles).setOnClickListener { openAllFilesAccessSettings() }
+        switchAllFiles.setOnClickListener { openAllFilesAccessSettings() }
+
         Shizuku.addBinderReceivedListener(shizukuBinderListener)
         Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
 
@@ -96,6 +126,15 @@ class SettingsPermissionsFragment : Fragment() {
         runCatching { Shizuku.removeBinderReceivedListener(shizukuBinderListener) }
         runCatching { Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener) }
         super.onDestroyView()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        refreshUi()
     }
 
     private fun refreshUi() {
@@ -118,6 +157,45 @@ class SettingsPermissionsFragment : Fragment() {
 
         // Shizuku
         refreshShizukuUi()
+
+        // Notifications
+        val notificationsGranted = hasNotificationPermission(ctx)
+        switchNotifications.isChecked = notificationsGranted
+        switchNotifications.isEnabled = Build.VERSION.SDK_INT >= 33 && !notificationsGranted
+        tvNotificationsStatus.text =
+            when {
+                Build.VERSION.SDK_INT < 33 -> "Android 13 以下无需授权"
+                notificationsGranted -> "已授权"
+                else -> "未授权（点击授权）"
+            }
+
+        // Location
+        val locationGranted = hasLocationPermission(ctx)
+        switchLocation.isChecked = locationGranted
+        switchLocation.isEnabled = !locationGranted
+        tvLocationStatus.text = if (locationGranted) "已授权" else "未授权（点击授权）"
+
+        // Storage read
+        val storageReadGranted = hasStorageReadPermission(ctx)
+        switchStorageRead.isChecked = storageReadGranted
+        switchStorageRead.isEnabled = !storageReadGranted
+        tvStorageReadStatus.text =
+            when {
+                storageReadGranted -> "已授权"
+                Build.VERSION.SDK_INT >= 33 -> "未授权（读取图片权限）"
+                else -> "未授权（读取存储权限）"
+            }
+
+        // All files access
+        val allFilesGranted = hasAllFilesAccess(ctx)
+        switchAllFiles.isChecked = allFilesGranted
+        switchAllFiles.isEnabled = !allFilesGranted && Build.VERSION.SDK_INT >= 30
+        tvAllFilesStatus.text =
+            when {
+                Build.VERSION.SDK_INT < 30 -> "Android 11 以下无需授权"
+                allFilesGranted -> "已授权"
+                else -> "未授权（点击跳转设置）"
+            }
     }
 
     private fun handleShizukuClick() {
@@ -188,6 +266,75 @@ class SettingsPermissionsFragment : Fragment() {
         }
     }
 
+    private fun requestNotificationsPermission() {
+        val ctx = context ?: return
+        if (Build.VERSION.SDK_INT < 33) {
+            Toast.makeText(ctx, "Android 13 以下无需通知权限", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+        val granted = hasNotificationPermission(ctx)
+        if (granted) {
+            Toast.makeText(ctx, "通知权限已授权", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIFICATIONS)
+    }
+
+    private fun requestLocationPermission() {
+        val ctx = context ?: return
+        val granted = hasLocationPermission(ctx)
+        if (granted) {
+            Toast.makeText(ctx, "位置权限已授权", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+        requestPermissions(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ),
+            REQ_LOCATION,
+        )
+    }
+
+    private fun requestStorageReadPermission() {
+        val ctx = context ?: return
+        val granted = hasStorageReadPermission(ctx)
+        if (granted) {
+            Toast.makeText(ctx, "读取权限已授权", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+        val perms =
+            if (Build.VERSION.SDK_INT >= 33) {
+                arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+            } else {
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        requestPermissions(perms, REQ_STORAGE)
+    }
+
+    private fun openAllFilesAccessSettings() {
+        val ctx = context ?: return
+        if (Build.VERSION.SDK_INT < 30) {
+            Toast.makeText(ctx, "Android 11 以下无需“所有文件访问”权限", Toast.LENGTH_SHORT).show()
+            refreshUi()
+            return
+        }
+        try {
+            val intent =
+                Intent(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    Uri.parse("package:${ctx.packageName}"),
+                )
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "无法打开所有文件访问设置：${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun openAccessibilitySettings() {
         try {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -241,6 +388,34 @@ class SettingsPermissionsFragment : Fragment() {
         return if (Build.VERSION.SDK_INT >= 33) {
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    private fun hasLocationPermission(ctx: Context): Boolean {
+        val fine =
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        val coarse =
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        return fine || coarse
+    }
+
+    private fun hasStorageReadPermission(ctx: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_MEDIA_IMAGES) ==
+                PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun hasAllFilesAccess(ctx: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= 30) {
+            Environment.isExternalStorageManager()
         } else {
             true
         }
