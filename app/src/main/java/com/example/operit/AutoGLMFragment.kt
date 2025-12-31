@@ -17,6 +17,7 @@ import com.example.operit.autoglm.AutoGlmOneClickFragment
 import com.example.operit.autoglm.runtime.AutoGlmAgentRunner
 import com.example.operit.logging.AppLog
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.slider.Slider
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -54,6 +55,13 @@ class AutoGLMFragment : Fragment() {
         val scrollLog = view.findViewById<ScrollView>(R.id.scrollLog)
         ivPreview = view.findViewById(R.id.ivPreview)
 
+        val tvMaxSteps = view.findViewById<TextView>(R.id.tvMaxStepsValue)
+        val sliderMaxSteps = view.findViewById<Slider>(R.id.sliderMaxSteps)
+        tvMaxSteps.text = sliderMaxSteps.value.toInt().coerceIn(1, 50).toString()
+        sliderMaxSteps.addOnChangeListener { _, value, _ ->
+            tvMaxSteps.text = value.toInt().coerceIn(1, 50).toString()
+        }
+
         btnExecute.setOnClickListener {
             if (isExecuting) {
                 cancelExecution("用户取消")
@@ -64,6 +72,7 @@ class AutoGLMFragment : Fragment() {
 
             val task = etTask.text.toString().trim()
             if (task.isBlank()) return@setOnClickListener
+            val maxSteps = sliderMaxSteps.value.toInt().coerceIn(1, 50)
 
             val ctx = context ?: return@setOnClickListener
             val settings = AiPreferences.get(ctx).load(AiPreferences.PROFILE_UI_CONTROLLER)
@@ -98,6 +107,7 @@ class AutoGLMFragment : Fragment() {
 
             startExecution(
                 task = task,
+                maxSteps = maxSteps,
                 onLogChanged = { renderLog(tvLog, scrollLog) },
                 onFinish = {
                     isExecuting = false
@@ -115,13 +125,15 @@ class AutoGLMFragment : Fragment() {
         }
     }
 
-    private fun startExecution(task: String, onLogChanged: () -> Unit, onFinish: () -> Unit) {
+    private fun startExecution(task: String, maxSteps: Int, onLogChanged: () -> Unit, onFinish: () -> Unit) {
         val ctx = context ?: return
         val settings = AiPreferences.get(ctx).load(AiPreferences.PROFILE_UI_CONTROLLER)
+        val safeSteps = maxSteps.coerceIn(1, 50)
 
         appendLog("==================================================")
         appendLog("Task: $task")
         appendLog("Model: ${settings.model}")
+        appendLog("MaxSteps: $safeSteps")
         appendLog("==================================================")
         onLogChanged()
 
@@ -144,7 +156,7 @@ class AutoGLMFragment : Fragment() {
             )
 
         Thread {
-            val result = runner?.run(task = task)
+            val result = runner?.run(task = task, maxSteps = safeSteps)
             activity?.runOnUiThread {
                 result?.exceptionOrNull()?.let { e ->
                     appendLog("执行失败：${e.message ?: e.javaClass.simpleName}")

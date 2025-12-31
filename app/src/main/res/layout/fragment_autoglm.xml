@@ -77,11 +77,46 @@
                 android:minLines="3"
                 android:padding="12dp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="最大执行步数"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvMaxStepsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="25"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderMaxSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:value="25"
+                android:valueFrom="1"
+                android:valueTo="50"
+                android:stepSize="1" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExecute"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:text="执行" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

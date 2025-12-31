@@ -132,7 +132,14 @@ object ChatToolRegistry {
                             "properties",
                             JSONObject()
                                 .put("task", JSONObject().put("type", "string").put("description", "要执行的手机自动化任务"))
-                                .put("max_steps", JSONObject().put("type", "integer").put("description", "最大步数（可选，默认 25）")),
+                                .put(
+                                    "max_steps",
+                                    JSONObject()
+                                        .put("type", "integer")
+                                        .put("minimum", 1)
+                                        .put("maximum", 50)
+                                        .put("description", "最大步数（可选，默认 25）"),
+                                ),
                         )
                         .put("required", JSONArray().put("task"))
                         .put("additionalProperties", false),
