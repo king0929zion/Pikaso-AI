@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class ShowerViewerActivity : AppCompatActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private lateinit var tvStatus: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,22 +28,8 @@ class ShowerViewerActivity : AppCompatActivity() {
 
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
-        val tvStatus = findViewById<TextView>(R.id.tvStatus)
+        tvStatus = findViewById(R.id.tvStatus)
         val btnCreate = findViewById<MaterialButton>(R.id.btnCreateIfNeeded)
-
-        fun refreshStatus() {
-            val shizuku = ShizukuScreencap.isReady()
-            val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
-            val id = runCatching { ShowerController.getDisplayId() }.getOrNull()
-            tvStatus.text =
-                buildString {
-                    appendLine("Shizuku：${if (shizuku) "已授权" else "未授权"}")
-                    appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
-                    appendLine("DisplayId：${id ?: "未创建"}")
-                    appendLine()
-                    appendLine("提示：此页面用于查看 AutoGLM 当前操作的虚拟屏幕画面。")
-                }.trimEnd()
-        }
 
         btnCreate.setOnClickListener {
             if (!ShizukuScreencap.isReady()) {
@@ -81,5 +68,25 @@ class ShowerViewerActivity : AppCompatActivity() {
 
         refreshStatus()
     }
-}
 
+    override fun onResume() {
+        super.onResume()
+        refreshStatus()
+    }
+
+    private fun refreshStatus() {
+        val shizuku = ShizukuScreencap.isReady()
+        val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
+        val id = runCatching { ShowerController.getDisplayId() }.getOrNull()
+        val size = runCatching { ShowerController.getVideoSize() }.getOrNull()
+        tvStatus.text =
+            buildString {
+                appendLine("Shizuku：${if (shizuku) "已授权" else "未授权"}")
+                appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
+                appendLine("DisplayId：${id ?: "未创建"}")
+                if (size != null) appendLine("Size：${size.first}x${size.second}")
+                appendLine()
+                appendLine("提示：此页面用于查看 AutoGLM 当前操作的虚拟屏幕画面。")
+            }.trimEnd()
+    }
+}

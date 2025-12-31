@@ -58,11 +58,15 @@ object AutoGlmSessionManager {
             }
         }
 
-        // 每次启动任务都创建/重建虚拟屏幕（Shower）
+        // 每次启动任务都确保虚拟屏幕就绪（Shower）；避免重复 ensureDisplay 造成“多虚拟屏幕/画面丢失”
         runCatching {
-            val ok = AutoGlmVirtualScreen.ensureCreated(ctx, onLog = ::appendLog)
-            if (!ok) {
-                appendLog("提示：虚拟屏幕未就绪，后续将回退到真实屏幕截图/无障碍执行")
+            if (!AutoGlmVirtualScreen.isReady()) {
+                val ok = AutoGlmVirtualScreen.ensureCreated(ctx, onLog = ::appendLog)
+                if (!ok) {
+                    appendLog("提示：虚拟屏幕未就绪，后续将回退到真实屏幕截图/无障碍执行")
+                }
+            } else {
+                appendLog("提示：虚拟屏幕已就绪，无需重复创建")
             }
             // 如果用户已授予悬浮窗权限，则自动显示“虚拟屏幕（悬浮窗）”方便查看 AI 当前操作画面
             ShowerVirtualScreenOverlay.show(ctx)

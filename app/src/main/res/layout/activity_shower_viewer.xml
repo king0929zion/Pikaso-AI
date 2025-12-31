@@ -34,7 +34,8 @@
             android:layout_marginTop="12dp"
             android:layout_weight="1"
             app:cardCornerRadius="18dp"
-            app:cardElevation="0dp">
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
             <com.ai.assistance.showerclient.ui.ShowerSurfaceView
                 android:id="@+id/showerSurface"

@@ -38,10 +38,12 @@ class AutoGlmAgentRunner(
             if (task.isBlank()) error("任务为空")
             if (!ShizukuScreencap.isReady()) error("需要 Shizuku 权限（用于截图）")
 
-            onLog("准备虚拟屏幕（Shower）…")
-            val virtualOk = AutoGlmVirtualScreen.ensureCreated(context, onLog = onLog)
-            if (!virtualOk) {
-                onLog("虚拟屏幕创建失败：将回退到真实屏幕截图/无障碍执行")
+            if (!AutoGlmVirtualScreen.isReady()) {
+                onLog("准备虚拟屏幕（Shower）…")
+                val virtualOk = AutoGlmVirtualScreen.ensureCreated(context, onLog = onLog)
+                if (!virtualOk) {
+                    onLog("虚拟屏幕创建失败：将回退到真实屏幕截图/无障碍执行")
+                }
             }
 
             val systemPrompt = AutoGlmAgentPrompts.buildUiAutomationSystemPrompt()

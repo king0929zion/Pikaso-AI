@@ -6,11 +6,15 @@
     android:orientation="vertical">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/overlayCard"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/md_theme_light_surface"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="18dp"
-        app:cardElevation="8dp">
+        app:cardElevation="8dp"
+        app:strokeWidth="0dp">
 
         <LinearLayout
             android:id="@+id/overlayHeader"
@@ -30,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="虚拟屏幕（悬浮窗）"
-                    android:textColor="@color/md_theme_light_onSurface"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -39,10 +43,10 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:background="@drawable/bg_tool_icon"
-                    android:backgroundTint="@color/md_theme_light_surfaceVariant"
+                    android:backgroundTint="?attr/colorSurfaceVariant"
                     android:contentDescription="close"
                     android:src="@drawable/ic_stop"
-                    app:tint="@color/md_theme_light_onSurfaceVariant" />
+                    app:tint="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
             <TextView
@@ -51,14 +55,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="未启动"
-                android:textColor="@color/md_theme_light_onSurfaceVariant"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp" />
-
-            <com.ai.assistance.showerclient.ui.ShowerSurfaceView
-                android:id="@+id/showerSurface"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="10dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
