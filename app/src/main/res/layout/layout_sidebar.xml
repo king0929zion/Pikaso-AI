@@ -76,12 +76,6 @@
             style="@style/Widget.Pikaso.NavItem"
             android:text="@string/nav_scripts"
             app:drawableStartCompat="@drawable/ic_code"/>
-
-        <TextView
-            android:id="@+id/navSettings"
-            style="@style/Widget.Pikaso.NavItem"
-            android:text="@string/nav_settings"
-            app:drawableStartCompat="@drawable/ic_settings"/>
     </LinearLayout>
 
     <!-- History Section (Flexible) -->
@@ -115,22 +109,52 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="16dp"
+        android:paddingVertical="12dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <View
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_avatar_placeholder"/>
-
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Clickable User Profile Area -->
+        <LinearLayout
+            android:id="@+id/userProfileArea"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/user_name"
-            android:textSize="14sp"
-            android:fontWeight="500"
-            android:layout_marginStart="12dp"
-            android:textColor="@color/md_theme_light_onSurface"/>
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/ivUserAvatar"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/bg_avatar_placeholder"
+                android:contentDescription="Avatar" />
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/user_name"
+                android:textSize="14sp"
+                android:fontWeight="500"
+                android:layout_marginStart="12dp"
+                android:textColor="@color/md_theme_light_onSurface"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
+        <!-- Settings Icon Button -->
+        <ImageButton
+            android:id="@+id/btnSidebarSettings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_settings"
+            android:background="@drawable/bg_tool_icon"
+            android:backgroundTint="@android:color/transparent"
+            android:contentDescription="Settings"
+            app:tint="@color/md_theme_light_onSurfaceVariant"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

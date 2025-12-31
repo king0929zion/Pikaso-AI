@@ -74,12 +74,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSidebar() {
-        // Nav Items
+        // Nav Items (Settings removed - now in bottom section)
         val navItems = mapOf(
             R.id.navChat to ChatFragment(),
             R.id.navTools to ToolsFragment(),
-            R.id.navScripts to ScriptsFragment(),
-            R.id.navSettings to SettingsFragment()
+            R.id.navScripts to ScriptsFragment()
         )
 
         navItems.forEach { (id, fragment) ->
@@ -97,6 +96,18 @@ class MainActivity : AppCompatActivity() {
             openNewChat()
         }
 
+        // Settings button (icon only, bottom right)
+        findViewById<View>(R.id.btnSidebarSettings).setOnClickListener {
+            loadFragment(SettingsFragment(), "settings", true, addToBackStack = true)
+            drawerLayout.closeDrawer(GravityCompat.START)
+        }
+
+        // User profile area -> open profile page
+        findViewById<View>(R.id.userProfileArea).setOnClickListener {
+            loadFragment(ProfileFragment(), "profile", true, addToBackStack = true)
+            drawerLayout.closeDrawer(GravityCompat.START)
+        }
+
         // Setup History List
         val historyList = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.historyList)
         historyList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
@@ -112,7 +123,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSidebarActiveState(activeId: Int) {
-        val ids = listOf(R.id.navChat, R.id.navTools, R.id.navScripts, R.id.navSettings)
+        val ids = listOf(R.id.navChat, R.id.navTools, R.id.navScripts)
         ids.forEach { id ->
             val view = findViewById<TextView>(id)
             if (id == activeId) {
@@ -165,12 +176,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateHeaderVisibility(fragment: Fragment) {
-        // 设置页及其子页面不需要顶部“模型选择/新对话”栏
+        // 设置页和个人资料页不需要顶部"模型选择/新对话"栏
         val name = fragment.javaClass.simpleName
-        val show = !name.startsWith("Settings")
+        val show = !name.startsWith("Settings") && !name.startsWith("Profile")
         header.isVisible = show
         drawerLayout.setDrawerLockMode(
-            if (name.startsWith("Settings")) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            if (name.startsWith("Settings") || name.startsWith("Profile")) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
         )
         if (show) updateHeaderModelName()
     }
