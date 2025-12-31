@@ -64,10 +64,10 @@ class SettingsAutoGlmFragment : Fragment() {
             provider = AiProvider.ZHIPU,
             endpoint = AiProvider.ZHIPU.defaultEndpoint,
             apiKey = apiKey,
-            model = "glm-4v", // Defaulting to glm-4v for AutoGLM as implied by visual capabilities usually needed, or standard glm-4
-            temperature = 0.1, // Lower temp for precise control
-            topP = 0.1,
-            maxTokens = 4096
+            model = "autoglm-phone",
+            temperature = 0.0f,
+            topP = 0.85f,
+            maxTokens = 4096,
         )
         
         prefs.save(AiPreferences.PROFILE_UI_CONTROLLER, settings)
