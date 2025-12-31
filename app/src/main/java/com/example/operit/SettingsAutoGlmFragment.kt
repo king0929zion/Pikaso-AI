@@ -1,0 +1,77 @@
+package com.example.operit
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import com.example.operit.ai.AiPreferences
+import com.example.operit.ai.AiProvider
+import com.example.operit.ai.AiSettings
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+
+class SettingsAutoGlmFragment : Fragment() {
+
+    private lateinit var etApiKey: TextInputEditText
+    private lateinit var prefs: AiPreferences
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.fragment_settings_autoglm, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        prefs = AiPreferences.get(requireContext())
+        
+        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationOnClickListener { parentFragmentManager.popBackStack() }
+
+        etApiKey = view.findViewById(R.id.etApiKey)
+
+        // Load existing key if any
+        val currentSettings = prefs.load(AiPreferences.PROFILE_UI_CONTROLLER)
+        if (currentSettings.provider == AiProvider.ZHIPU) {
+            etApiKey.setText(currentSettings.apiKey)
+        }
+
+        view.findViewById<MaterialButton>(R.id.btnGetApiKey).setOnClickListener {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://open.bigmodel.cn/usercenter/apikeys"))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "无法打开浏览器", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        view.findViewById<MaterialButton>(R.id.btnSave).setOnClickListener {
+            save()
+        }
+    }
+
+    private fun save() {
+        val apiKey = etApiKey.text?.toString().orEmpty().trim()
+        if (apiKey.isBlank()) {
+            Toast.makeText(requireContext(), "请输入 API Key", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Auto confirm default settings for AutoGLM
+        val settings = AiSettings(
+            provider = AiProvider.ZHIPU,
+            endpoint = AiProvider.ZHIPU.defaultEndpoint,
+            apiKey = apiKey,
+            model = "glm-4v", // Defaulting to glm-4v for AutoGLM as implied by visual capabilities usually needed, or standard glm-4
+            temperature = 0.1, // Lower temp for precise control
+            topP = 0.1,
+            maxTokens = 4096
+        )
+        
+        prefs.save(AiPreferences.PROFILE_UI_CONTROLLER, settings)
+        Toast.makeText(requireContext(), "AutoGLM 配置已更新", Toast.LENGTH_SHORT).show()
+        parentFragmentManager.popBackStack()
+    }
+}
