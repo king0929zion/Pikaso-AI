@@ -39,9 +39,8 @@ class HistoryAdapter(
 
         fun bind(item: ChatStore.SessionMeta) {
             tvDate.text = formatTime(item.updatedAt)
-            tvPreview.text = item.preview
+            tvPreview.text = item.preview.ifBlank { "新对话" }
             itemView.setOnClickListener { onClick(item) }
         }
     }
 }
-

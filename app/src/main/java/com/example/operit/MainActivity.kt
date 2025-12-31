@@ -60,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.modelSelector).setOnClickListener {
             loadFragment(SettingsAiFragment(), "settings_ai", true, addToBackStack = true)
-            updateSidebarActiveState(R.id.navSettings)
         }
 
         // Sidebar interactions
