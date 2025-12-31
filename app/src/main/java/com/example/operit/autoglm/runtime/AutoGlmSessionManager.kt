@@ -30,7 +30,7 @@ object AutoGlmSessionManager {
 
     private val sessions = ConcurrentHashMap<String, Session>()
 
-    fun start(context: Context, task: String, maxSteps: Int = 25): JSONObject {
+    fun start(context: Context, task: String, maxSteps: Int = 0): JSONObject {
         val ctx = context.applicationContext
 
         if (task.isBlank()) {
@@ -75,6 +75,9 @@ object AutoGlmSessionManager {
             appendLog("虚拟屏幕初始化异常：${e.message ?: e.javaClass.simpleName}")
         }
 
+        val preferredMaxSteps = AiPreferences.get(ctx).loadUiControllerMaxSteps()
+        val resolvedMaxSteps = (if (maxSteps > 0) maxSteps else preferredMaxSteps).coerceIn(1, 100)
+
         val runner =
             AutoGlmAgentRunner(
                 context = ctx,
@@ -92,10 +95,11 @@ object AutoGlmSessionManager {
                 endedAt = null,
                 log = sb,
                 runner = runner,
-                maxSteps = maxSteps.coerceIn(1, 50),
+                maxSteps = resolvedMaxSteps,
             )
 
         sessions[id] = session
+        updateForeground(ctx)
 
         Thread {
             val result = runner.run(task = task, maxSteps = session.maxSteps)
@@ -112,6 +116,7 @@ object AutoGlmSessionManager {
                 AppLog.e("AutoGLM", "session failed id=$id", e)
                 appendLog("失败：${e.message ?: e.javaClass.simpleName}")
             }
+            updateForeground(ctx)
         }.start()
 
         return JSONObject()
@@ -147,5 +152,10 @@ object AutoGlmSessionManager {
         s.status = Status.CANCELLED
         s.endedAt = System.currentTimeMillis()
         return JSONObject().put("ok", true).put("session_id", s.id).put("status", s.status.name)
+    }
+
+    private fun updateForeground(context: Context) {
+        val anyRunning = sessions.values.any { it.status == Status.RUNNING }
+        AutoGlmForegroundService.setRunning(context.applicationContext, anyRunning)
     }
 }

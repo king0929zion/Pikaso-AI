@@ -57,9 +57,9 @@ class AutoGLMFragment : Fragment() {
 
         val tvMaxSteps = view.findViewById<TextView>(R.id.tvMaxStepsValue)
         val sliderMaxSteps = view.findViewById<Slider>(R.id.sliderMaxSteps)
-        tvMaxSteps.text = sliderMaxSteps.value.toInt().coerceIn(1, 50).toString()
+        tvMaxSteps.text = sliderMaxSteps.value.toInt().coerceIn(1, 100).toString()
         sliderMaxSteps.addOnChangeListener { _, value, _ ->
-            tvMaxSteps.text = value.toInt().coerceIn(1, 50).toString()
+            tvMaxSteps.text = value.toInt().coerceIn(1, 100).toString()
         }
 
         btnExecute.setOnClickListener {
@@ -72,7 +72,7 @@ class AutoGLMFragment : Fragment() {
 
             val task = etTask.text.toString().trim()
             if (task.isBlank()) return@setOnClickListener
-            val maxSteps = sliderMaxSteps.value.toInt().coerceIn(1, 50)
+            val maxSteps = sliderMaxSteps.value.toInt().coerceIn(1, 100)
 
             val ctx = context ?: return@setOnClickListener
             val settings = AiPreferences.get(ctx).load(AiPreferences.PROFILE_UI_CONTROLLER)
@@ -128,7 +128,7 @@ class AutoGLMFragment : Fragment() {
     private fun startExecution(task: String, maxSteps: Int, onLogChanged: () -> Unit, onFinish: () -> Unit) {
         val ctx = context ?: return
         val settings = AiPreferences.get(ctx).load(AiPreferences.PROFILE_UI_CONTROLLER)
-        val safeSteps = maxSteps.coerceIn(1, 50)
+        val safeSteps = maxSteps.coerceIn(1, 100)
 
         appendLog("==================================================")
         appendLog("Task: $task")

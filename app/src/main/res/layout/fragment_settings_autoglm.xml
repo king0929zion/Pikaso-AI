@@ -89,6 +89,48 @@
                         android:textColor="?attr/colorPrimary"
                         android:layout_gravity="end"/>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="18dp"
+                        android:background="?attr/colorSurfaceVariant"
+                        android:alpha="0.35" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="默认最大执行步数"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvMaxStepsValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:text="25"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderMaxSteps"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="25.0"
+                        android:valueFrom="1.0"
+                        android:valueTo="100.0"
+                        android:stepSize="1.0" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSave"
                         style="@style/Widget.Pikaso.Button.Pill"

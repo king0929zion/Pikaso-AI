@@ -137,8 +137,8 @@ object ChatToolRegistry {
                                     JSONObject()
                                         .put("type", "integer")
                                         .put("minimum", 1)
-                                        .put("maximum", 50)
-                                        .put("description", "最大步数（可选，默认 25）"),
+                                        .put("maximum", 100)
+                                        .put("description", "最大步数（可选；不填则使用“设置->AutoGLM 配置”里的默认值）"),
                                 ),
                         )
                         .put("required", JSONArray().put("task"))
@@ -190,7 +190,7 @@ object ChatToolRegistry {
                     "shower_overlay_hide" -> showerOverlayHide()
                     "shower_status" -> showerStatus(context)
                     "shower_log_read" -> showerLogRead(args.optInt("max_chars", 8000))
-                    "autoglm_run" -> AutoGlmSessionManager.start(context, args.optString("task", ""), args.optInt("max_steps", 25))
+                    "autoglm_run" -> AutoGlmSessionManager.start(context, args.optString("task", ""), args.optInt("max_steps", 0))
                     "autoglm_status" ->
                         AutoGlmSessionManager.status(
                             sessionId = args.optString("session_id", ""),

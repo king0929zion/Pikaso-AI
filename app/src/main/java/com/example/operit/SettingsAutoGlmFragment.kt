@@ -13,11 +13,14 @@ import com.example.operit.ai.AiProvider
 import com.example.operit.ai.AiSettings
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 
 class SettingsAutoGlmFragment : Fragment() {
 
     private lateinit var etApiKey: TextInputEditText
+    private lateinit var tvMaxStepsValue: android.widget.TextView
+    private lateinit var sliderMaxSteps: Slider
     private lateinit var prefs: AiPreferences
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -31,11 +34,20 @@ class SettingsAutoGlmFragment : Fragment() {
         toolbar.setNavigationOnClickListener { parentFragmentManager.popBackStack() }
 
         etApiKey = view.findViewById(R.id.etApiKey)
+        tvMaxStepsValue = view.findViewById(R.id.tvMaxStepsValue)
+        sliderMaxSteps = view.findViewById(R.id.sliderMaxSteps)
 
         // Load existing key if any
         val currentSettings = prefs.load(AiPreferences.PROFILE_UI_CONTROLLER)
         if (currentSettings.provider == AiProvider.ZHIPU) {
             etApiKey.setText(currentSettings.apiKey)
+        }
+
+        val currentMaxSteps = prefs.loadUiControllerMaxSteps()
+        sliderMaxSteps.value = currentMaxSteps.toFloat().coerceIn(1f, 100f)
+        tvMaxStepsValue.text = sliderMaxSteps.value.toInt().coerceIn(1, 100).toString()
+        sliderMaxSteps.addOnChangeListener { _, value, _ ->
+            tvMaxStepsValue.text = value.toInt().coerceIn(1, 100).toString()
         }
 
         view.findViewById<MaterialButton>(R.id.btnGetApiKey).setOnClickListener {
@@ -53,11 +65,16 @@ class SettingsAutoGlmFragment : Fragment() {
     }
 
     private fun save() {
-        val apiKey = etApiKey.text?.toString().orEmpty().trim()
+        val apiKeyInput = etApiKey.text?.toString().orEmpty().trim()
+        val existing = prefs.load(AiPreferences.PROFILE_UI_CONTROLLER)
+        val apiKey = if (apiKeyInput.isNotBlank()) apiKeyInput else existing.apiKey
         if (apiKey.isBlank()) {
             Toast.makeText(requireContext(), "请输入 API Key", Toast.LENGTH_SHORT).show()
             return
         }
+
+        val maxSteps = sliderMaxSteps.value.toInt().coerceIn(1, 100)
+        prefs.saveUiControllerMaxSteps(maxSteps)
 
         // Auto confirm default settings for AutoGLM
         val settings = AiSettings(
@@ -71,7 +88,7 @@ class SettingsAutoGlmFragment : Fragment() {
         )
         
         prefs.save(AiPreferences.PROFILE_UI_CONTROLLER, settings)
-        Toast.makeText(requireContext(), "AutoGLM 配置已更新", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "AutoGLM 配置已更新（默认步数：$maxSteps）", Toast.LENGTH_SHORT).show()
         parentFragmentManager.popBackStack()
     }
 }

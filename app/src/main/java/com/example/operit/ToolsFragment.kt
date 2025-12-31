@@ -25,7 +25,6 @@ class ToolsFragment : Fragment() {
         recyclerView.adapter = ToolsAdapter { id ->
             val fragment = when (id) {
                 "web2apk" -> Web2ApkFragment()
-                "autoglm" -> AutoGLMFragment()
                 "config" -> AutoGlmOneClickFragment()
                 "autoglm_test" -> AutoGlmConnectionTestFragment()
                 "virtual_screen" -> VirtualScreenFragment()

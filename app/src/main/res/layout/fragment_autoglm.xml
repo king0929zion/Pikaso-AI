@@ -109,7 +109,7 @@
                 android:layout_height="wrap_content"
                 android:value="25"
                 android:valueFrom="1"
-                android:valueTo="50"
+                android:valueTo="100"
                 android:stepSize="1" />
 
             <com.google.android.material.button.MaterialButton

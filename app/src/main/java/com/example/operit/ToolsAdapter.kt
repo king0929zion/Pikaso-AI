@@ -14,7 +14,6 @@ class ToolsAdapter(private val onItemClick: (String) -> Unit) :
 
     private val tools =
         listOf(
-            Tool("autoglm", "AutoGLM 执行器", "自动化执行复杂任务，支持多模态交互。", R.drawable.ic_smart_toy),
             Tool("autoglm_test", "AutoGLM 连接测试", "截图 + 调用 autoglm-phone，快速定位 API/权限问题。", R.drawable.ic_build),
             Tool("config", "一键配置", "快速设置 AutoGLM 环境参数。", R.drawable.ic_tune),
             Tool("virtual_screen", "虚拟屏幕", "创建虚拟显示并截图预览（实验）。", R.drawable.ic_grid),
@@ -45,13 +44,8 @@ class ToolsAdapter(private val onItemClick: (String) -> Unit) :
             itemView.setOnClickListener { onClick(tool.id) }
 
             val iconContainer = itemView.findViewById<View>(R.id.iconContainer)
-            if (tool.id == "autoglm") {
-                iconContainer.background.setTint(itemView.context.getColor(R.color.md_theme_light_secondaryContainer))
-                ivIcon.setColorFilter(itemView.context.getColor(R.color.md_theme_light_onSecondaryContainer))
-            } else {
-                iconContainer.background.setTint(itemView.context.getColor(R.color.md_theme_light_surfaceVariant))
-                ivIcon.setColorFilter(itemView.context.getColor(R.color.md_theme_light_onSurfaceVariant))
-            }
+            iconContainer.background.setTint(itemView.context.getColor(R.color.md_theme_light_surfaceVariant))
+            ivIcon.setColorFilter(itemView.context.getColor(R.color.md_theme_light_onSurfaceVariant))
         }
     }
 }

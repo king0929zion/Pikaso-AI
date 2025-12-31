@@ -101,6 +101,16 @@ class AiPreferences private constructor(private val context: Context) {
             .apply()
     }
 
+    fun loadUiControllerMaxSteps(): Int {
+        val k = key(PROFILE_UI_CONTROLLER, KEY_MAX_STEPS)
+        val raw = if (sp.contains(k)) sp.getInt(k, DEFAULT_UI_CONTROLLER_MAX_STEPS) else DEFAULT_UI_CONTROLLER_MAX_STEPS
+        return raw.coerceIn(1, 100)
+    }
+
+    fun saveUiControllerMaxSteps(value: Int) {
+        sp.edit().putInt(key(PROFILE_UI_CONTROLLER, KEY_MAX_STEPS), value.coerceIn(1, 100)).apply()
+    }
+
     private fun key(profile: String, baseKey: String): String {
         return if (profile == PROFILE_CHAT) baseKey else "${profile}_$baseKey"
     }
@@ -114,6 +124,7 @@ class AiPreferences private constructor(private val context: Context) {
         private const val KEY_TEMPERATURE = "temperature"
         private const val KEY_TOP_P = "top_p"
         private const val KEY_MAX_TOKENS = "max_tokens"
+        private const val KEY_MAX_STEPS = "max_steps"
 
         const val PROFILE_CHAT = "chat"
         const val PROFILE_UI_CONTROLLER = "ui_controller"
@@ -123,6 +134,7 @@ class AiPreferences private constructor(private val context: Context) {
         private const val DEFAULT_UI_CONTROLLER_TEMPERATURE = 0.0f
         private const val DEFAULT_UI_CONTROLLER_TOP_P = 0.85f
         private const val DEFAULT_UI_CONTROLLER_MAX_TOKENS = 3000
+        private const val DEFAULT_UI_CONTROLLER_MAX_STEPS = 25
 
         fun get(context: Context): AiPreferences = AiPreferences(context.applicationContext)
     }
