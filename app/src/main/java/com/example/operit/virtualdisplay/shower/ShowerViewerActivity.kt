@@ -1,18 +1,23 @@
 package com.example.operit.virtualdisplay.shower
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.ai.assistance.showerclient.ShowerBinderRegistry
 import com.ai.assistance.showerclient.ShowerController
 import com.ai.assistance.showerclient.ShowerServerManager
 import com.example.operit.R
+import com.example.operit.autoglm.runtime.AutoGlmUiStatus
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.os.Handler
+import android.os.Looper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,26 +25,44 @@ import kotlinx.coroutines.launch
 
 class ShowerViewerActivity : AppCompatActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private lateinit var tvStatus: TextView
+    private lateinit var btnCreate: MaterialButton
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val updateButtonRunnable =
+        object : Runnable {
+            override fun run() {
+                val label = AutoGlmUiStatus.getButtonLabel(defaultLabel = "没有画面？点此创建/重连")
+                btnCreate.text = label
+                handler.postDelayed(this, 500)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shower_viewer)
 
-        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationOnClickListener { finish() }
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_info -> {
+                    showInfoDialog()
+                    true
+                }
+                else -> false
+            }
+        }
 
-        tvStatus = findViewById(R.id.tvStatus)
-        val btnCreate = findViewById<MaterialButton>(R.id.btnCreateIfNeeded)
+        btnCreate = findViewById(R.id.btnCreateIfNeeded)
 
         btnCreate.setOnClickListener {
             if (!ShizukuScreencap.isReady()) {
                 Toast.makeText(this, "请先授予 Shizuku 权限", Toast.LENGTH_SHORT).show()
-                refreshStatus()
                 return@setOnClickListener
             }
 
             scope.launch(Dispatchers.Main) {
-                tvStatus.text = "正在启动/重连虚拟屏幕…"
+                Toast.makeText(this@ShowerViewerActivity, "正在启动/重连虚拟屏幕…", Toast.LENGTH_SHORT).show()
                 val ok =
                     runCatching {
                         val started = ShowerServerManager.ensureServerStarted(this@ShowerViewerActivity)
@@ -62,36 +85,56 @@ class ShowerViewerActivity : AppCompatActivity() {
                 if (!ok) {
                     Toast.makeText(this@ShowerViewerActivity, "启动失败，可在聊天里调用 shower_log_read 查看日志", Toast.LENGTH_LONG).show()
                 }
-                refreshStatus()
             }
         }
-
-        refreshStatus()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshStatus()
+        handler.removeCallbacks(updateButtonRunnable)
+        handler.post(updateButtonRunnable)
     }
 
-    private fun refreshStatus() {
+    override fun onPause() {
+        handler.removeCallbacks(updateButtonRunnable)
+        super.onPause()
+    }
+
+    private fun buildStatusText(): String {
         val shizuku = ShizukuScreencap.isReady()
         val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
         val id = runCatching { ShowerController.getDisplayId() }.getOrNull()
         val size = runCatching { ShowerController.getVideoSize() }.getOrNull()
         val stats = runCatching { ShowerController.getFrameStats() }.getOrNull()
-        tvStatus.text =
-            buildString {
-                appendLine("Shizuku：${if (shizuku) "已授权" else "未授权"}")
-                appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
-                appendLine("DisplayId：${id ?: "未创建"}")
-                if (size != null) appendLine("Size：${size.first}x${size.second}")
-                if (stats != null) {
-                    val lastAt = stats.lastFrameAtMs?.let { System.currentTimeMillis() - it } ?: -1
-                    appendLine("Frames：${stats.receivedFrames} thinkBuf=${stats.bufferedFrames} cfg=${stats.cachedConfigFrames} last=${if (lastAt >= 0) "${lastAt}ms" else "-"}")
-                }
+        val action = AutoGlmUiStatus.getStatusLine()
+
+        return buildString {
+            appendLine("Shizuku：${if (shizuku) "已授权" else "未授权"}")
+            appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
+            appendLine("DisplayId：${id ?: "未创建"}")
+            if (size != null) appendLine("Size：${size.first}x${size.second}")
+            if (stats != null) {
+                val lastAt = stats.lastFrameAtMs?.let { System.currentTimeMillis() - it } ?: -1
+                appendLine("Frames：${stats.receivedFrames} buf=${stats.bufferedFrames} cfg=${stats.cachedConfigFrames} last=${if (lastAt >= 0) "${lastAt}ms" else "-"}")
+            }
+            if (action.isNotBlank()) {
                 appendLine()
-                appendLine("提示：此页面用于查看 AutoGLM 当前操作的虚拟屏幕画面。")
-            }.trimEnd()
+                appendLine(action)
+            }
+        }.trimEnd()
+    }
+
+    private fun showInfoDialog() {
+        val msg = buildStatusText()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("虚拟屏幕信息")
+            .setMessage(msg)
+            .setPositiveButton("关闭", null)
+            .setNeutralButton("复制") { _, _ ->
+                val cm = getSystemService(ClipboardManager::class.java)
+                cm?.setPrimaryClip(ClipData.newPlainText("Shower Status", msg))
+                Toast.makeText(this, "已复制", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 }

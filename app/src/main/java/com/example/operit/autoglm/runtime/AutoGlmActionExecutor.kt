@@ -36,7 +36,10 @@ class AutoGlmActionExecutor(
             return ExecResult(false, "无障碍服务未连接（请先在系统设置中开启）")
         }
 
-        return when (actionName) {
+        AutoGlmUiStatus.onAction(actionName, args)
+
+        val result =
+            when (actionName) {
             "Home" ->
                 if (useVirtual) {
                     ExecResult(showerKey(KeyEvent.KEYCODE_HOME))
@@ -173,6 +176,9 @@ class AutoGlmActionExecutor(
             "Call_API" -> ExecResult(true)
             else -> ExecResult(false, "未知 action：$actionName")
         }
+
+        AutoGlmUiStatus.onActionResult(result.ok, actionName)
+        return result
     }
 
     private fun launchApp(packageName: String): Boolean {
@@ -376,4 +382,3 @@ class AutoGlmActionExecutor(
         return num.toDoubleOrNull()
     }
 }
-
