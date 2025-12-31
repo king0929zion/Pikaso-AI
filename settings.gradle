@@ -1,6 +1,9 @@
 pluginManagement {
     repositories {
         google()
+        // CI 偶发对 repo.maven.apache.org 返回 403，增加镜像兜底
+        maven { url "https://repo1.maven.org/maven2" }
+        maven { url "https://maven.aliyun.com/repository/public" }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -9,6 +12,9 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        // CI 偶发对 repo.maven.apache.org 返回 403，增加镜像兜底
+        maven { url "https://repo1.maven.org/maven2" }
+        maven { url "https://maven.aliyun.com/repository/public" }
         mavenCentral()
     }
 }
