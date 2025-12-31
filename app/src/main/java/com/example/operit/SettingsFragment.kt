@@ -26,10 +26,11 @@ class SettingsFragment : Fragment() {
         val items = listOf(
             SettingsAdapter.SettingItem("language", getString(R.string.settings_language), getString(R.string.settings_language_sub), R.drawable.ic_language),
             SettingsAdapter.SettingItem("ai", getString(R.string.settings_ai), getString(R.string.settings_ai_sub), R.drawable.ic_settings_fill),
-            SettingsAdapter.SettingItem("autoglm", "AutoGLM 配置", "配置智能体控制模型 (需智谱 API)", R.drawable.ic_robot_2), // Using robot icon if available, or extension
+            SettingsAdapter.SettingItem("autoglm", "AutoGLM 配置", "配置智能体控制模型 (需智谱 API)", R.drawable.ic_robot_2),
             SettingsAdapter.SettingItem("features", getString(R.string.settings_features), getString(R.string.settings_features_sub), R.drawable.ic_extension),
             SettingsAdapter.SettingItem("prompts", getString(R.string.settings_prompts), getString(R.string.settings_prompts_sub), R.drawable.ic_edit_note),
-            SettingsAdapter.SettingItem("permissions", getString(R.string.settings_permissions), getString(R.string.settings_permissions_sub), R.drawable.ic_security)
+            SettingsAdapter.SettingItem("permissions", getString(R.string.settings_permissions), getString(R.string.settings_permissions_sub), R.drawable.ic_security),
+            SettingsAdapter.SettingItem("logs", getString(R.string.logs_title), "查看系统运行日志", R.drawable.ic_terminal)
         )
 
         recyclerView.adapter = SettingsAdapter(items) { item ->
@@ -40,6 +41,7 @@ class SettingsFragment : Fragment() {
                 "features" -> SettingsFeaturesFragment()
                 "prompts" -> SettingsPromptsFragment()
                 "permissions" -> SettingsPermissionsFragment()
+                "logs" -> LogsFragment()
                 else -> null
             }
 

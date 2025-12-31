@@ -34,14 +34,15 @@
             android:layout_marginStart="16dp"
             android:textColor="@color/md_theme_light_onBackground"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
+            style="@style/Widget.Pikaso.Button.Pill"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:text="保存"
-            android:textColor="@color/md_theme_light_onPrimary"
-            android:backgroundTint="@color/md_theme_light_primary"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
+            android:textSize="14sp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"/>
     </LinearLayout>
 
     <androidx.cardview.widget.CardView
