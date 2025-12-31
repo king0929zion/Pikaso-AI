@@ -79,12 +79,17 @@ class ShowerViewerActivity : AppCompatActivity() {
         val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
         val id = runCatching { ShowerController.getDisplayId() }.getOrNull()
         val size = runCatching { ShowerController.getVideoSize() }.getOrNull()
+        val stats = runCatching { ShowerController.getFrameStats() }.getOrNull()
         tvStatus.text =
             buildString {
                 appendLine("Shizuku：${if (shizuku) "已授权" else "未授权"}")
                 appendLine("Binder：${if (binderAlive) "alive" else "not ready"}")
                 appendLine("DisplayId：${id ?: "未创建"}")
                 if (size != null) appendLine("Size：${size.first}x${size.second}")
+                if (stats != null) {
+                    val lastAt = stats.lastFrameAtMs?.let { System.currentTimeMillis() - it } ?: -1
+                    appendLine("Frames：${stats.receivedFrames} thinkBuf=${stats.bufferedFrames} cfg=${stats.cachedConfigFrames} last=${if (lastAt >= 0) "${lastAt}ms" else "-"}")
+                }
                 appendLine()
                 appendLine("提示：此页面用于查看 AutoGLM 当前操作的虚拟屏幕画面。")
             }.trimEnd()

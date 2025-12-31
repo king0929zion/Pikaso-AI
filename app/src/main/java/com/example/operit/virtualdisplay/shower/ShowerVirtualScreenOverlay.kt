@@ -177,6 +177,7 @@ object ShowerVirtualScreenOverlay {
         val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
         val displayId = runCatching { ShowerController.getDisplayId() }.getOrNull()
         val size = runCatching { ShowerController.getVideoSize() }.getOrNull()
+        val stats = runCatching { ShowerController.getFrameStats() }.getOrNull()
         tv.text =
             buildString {
                 append("Binder: ").append(if (binderAlive) "alive" else "not ready")
@@ -184,12 +185,22 @@ object ShowerVirtualScreenOverlay {
                 if (size != null) {
                     append("  Size: ").append(size.first).append("x").append(size.second)
                 }
+                if (stats != null) {
+                    val lastAt = stats.lastFrameAtMs?.let { System.currentTimeMillis() - it } ?: -1
+                    appendLine()
+                    append("Frames: ").append(stats.receivedFrames)
+                    append("  Buf: ").append(stats.bufferedFrames)
+                    append("  Cfg: ").append(stats.cachedConfigFrames)
+                    if (lastAt >= 0) append("  Last: ").append(lastAt).append("ms")
+                }
                 appendLine()
                 append("点击打开虚拟屏幕")
             }
     }
 
     private fun openViewer(context: Context) {
+        // 避免 Overlay 与 Viewer 同时持有 SurfaceView 导致抢占 binary handler（表现为一边黑屏）。
+        hide()
         runCatching {
             val i = Intent(context, ShowerViewerActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(i)

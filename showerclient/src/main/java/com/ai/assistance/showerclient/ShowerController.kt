@@ -22,6 +22,17 @@ object ShowerController {
 
     private const val TAG = "ShowerController"
 
+    data class FrameStats(
+        val receivedFrames: Long,
+        val receivedBytes: Long,
+        val bufferedFrames: Int,
+        val lastFrameBytes: Int,
+        val firstFrameAtMs: Long?,
+        val lastFrameAtMs: Long?,
+        val hasBinaryHandler: Boolean,
+        val cachedConfigFrames: Int,
+    )
+
     @Volatile
     private var binderService: IShowerService? = null
 
@@ -43,20 +54,76 @@ object ShowerController {
     private val earlyBinaryFrames = ArrayDeque<ByteArray>()
 
     @Volatile
+    private var receivedFrames: Long = 0
+
+    @Volatile
+    private var receivedBytes: Long = 0
+
+    @Volatile
+    private var lastFrameBytes: Int = 0
+
+    @Volatile
+    private var firstFrameAtMs: Long = 0
+
+    @Volatile
+    private var lastFrameAtMs: Long = 0
+
+    @Volatile
+    private var cachedConfig0: ByteArray? = null
+
+    @Volatile
+    private var cachedConfig1: ByteArray? = null
+
+    @Volatile
+    private var expectConfigFrames: Boolean = false
+
+    @Volatile
+    private var configFrameCount: Int = 0
+
+    @Volatile
     private var binaryHandler: ((ByteArray) -> Unit)? = null
+
+    fun getFrameStats(): FrameStats {
+        val buffered: Int
+        val handlerSet: Boolean
+        val cachedCfg: Int
+        synchronized(binaryLock) {
+            buffered = earlyBinaryFrames.size
+            handlerSet = binaryHandler != null
+            cachedCfg = (if (cachedConfig0 != null) 1 else 0) + (if (cachedConfig1 != null) 1 else 0)
+        }
+        val first = firstFrameAtMs.takeIf { it > 0 }
+        val last = lastFrameAtMs.takeIf { it > 0 }
+        return FrameStats(
+            receivedFrames = receivedFrames,
+            receivedBytes = receivedBytes,
+            bufferedFrames = buffered,
+            lastFrameBytes = lastFrameBytes,
+            firstFrameAtMs = first,
+            lastFrameAtMs = last,
+            hasBinaryHandler = handlerSet,
+            cachedConfigFrames = cachedCfg,
+        )
+    }
 
     fun setBinaryHandler(handler: ((ByteArray) -> Unit)?) {
         val framesToReplay: List<ByteArray>
         synchronized(binaryLock) {
             binaryHandler = handler
             Log.d(TAG, "setBinaryHandler: handlerSet=${handler != null}, bufferedFrames=${earlyBinaryFrames.size}")
-            framesToReplay = if (handler != null && earlyBinaryFrames.isNotEmpty()) {
-                val list = earlyBinaryFrames.toList()
-                earlyBinaryFrames.clear()
-                list
-            } else {
-                emptyList()
-            }
+            framesToReplay =
+                if (handler != null) {
+                    val replay = ArrayList<ByteArray>(2 + earlyBinaryFrames.size)
+                    cachedConfig0?.let { replay.add(it) }
+                    cachedConfig1?.let { replay.add(it) }
+                    if (earlyBinaryFrames.isNotEmpty()) {
+                        replay.addAll(earlyBinaryFrames)
+                        earlyBinaryFrames.clear()
+                    }
+                    replay
+                } else {
+                    emptyList()
+                }
         }
         if (handler != null && framesToReplay.isNotEmpty()) {
             Log.d(TAG, "setBinaryHandler: replaying ${framesToReplay.size} buffered frames")
@@ -73,6 +140,28 @@ object ShowerController {
         override fun onVideoFrame(data: ByteArray) {
             val handler: ((ByteArray) -> Unit)?
             synchronized(binaryLock) {
+                if (firstFrameAtMs == 0L) {
+                    firstFrameAtMs = System.currentTimeMillis()
+                }
+                lastFrameAtMs = System.currentTimeMillis()
+                receivedFrames++
+                receivedBytes += data.size.toLong()
+                lastFrameBytes = data.size
+
+                if (expectConfigFrames && configFrameCount < 2) {
+                    // Shower server sends csd-0/csd-1 right after INFO_OUTPUT_FORMAT_CHANGED.
+                    // Cache them so that UI can attach later without losing SPS/PPS.
+                    if (configFrameCount == 0) {
+                        cachedConfig0 = data
+                    } else if (configFrameCount == 1) {
+                        cachedConfig1 = data
+                    }
+                    configFrameCount++
+                    if (configFrameCount >= 2) {
+                        expectConfigFrames = false
+                    }
+                }
+
                 handler = binaryHandler
                 if (handler == null) {
                     if (earlyBinaryFrames.size >= 120) {
@@ -88,6 +177,9 @@ object ShowerController {
     private suspend fun ensureConnected(restartContext: Context? = null): Boolean =
         withContext(Dispatchers.IO) {
             if (binderService?.asBinder()?.isBinderAlive == true) {
+                // Binder is alive, but the server-side video sink could have been cleared (e.g. binderDied).
+                // Re-set it defensively to avoid "black screen" issues.
+                runCatching { binderService?.setVideoSink(videoSink.asBinder()) }
                 return@withContext true
             }
 
@@ -160,6 +252,12 @@ object ShowerController {
     ): Boolean = withContext(Dispatchers.IO) {
         if (!ensureConnected(context)) return@withContext false
         try {
+            synchronized(binaryLock) {
+                expectConfigFrames = true
+                configFrameCount = 0
+                cachedConfig0 = null
+                cachedConfig1 = null
+            }
             // Align size similar to WebSocket version
             val alignedWidth = width and -8
             val alignedHeight = height and -8

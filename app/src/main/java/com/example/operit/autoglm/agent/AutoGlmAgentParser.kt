@@ -6,9 +6,10 @@ object AutoGlmAgentParser {
 
     fun parse(text: String): AutoGlmAgentResponse {
         val thinking = thinkRegex.find(text)?.groupValues?.getOrNull(1)?.trim()
-        val answer = answerRegex.find(text)?.groupValues?.getOrNull(1)?.trim()
-        val action = answer?.let { parseAction(it) }
-        return AutoGlmAgentResponse(thinking = thinking, answerRaw = answer, action = action)
+        val answerRaw = answerRegex.find(text)?.groupValues?.getOrNull(1)?.trim()
+        val fallback = answerRaw ?: extractActionCall(text)
+        val action = fallback?.let { parseAction(it) }
+        return AutoGlmAgentResponse(thinking = thinking, answerRaw = fallback, action = action)
     }
 
     fun parseAction(answer: String): AutoGlmAgentAction? {
@@ -103,5 +104,49 @@ object AutoGlmAgentParser {
         }
         return v
     }
-}
 
+    /**
+     * 部分模型会忽略 <answer> 标签而直接输出自然语言 + do(...)/finish(...)
+     * 这里做一个兜底：从全文中提取第一个可解析的动作调用。
+     */
+    private fun extractActionCall(text: String): String? {
+        val candidates = listOf("do(", "finish(", "interrupt(")
+        val start = candidates.mapNotNull { token -> text.indexOf(token).takeIf { it >= 0 } }.minOrNull() ?: return null
+        val chunk = text.substring(start)
+        return takeCallChunk(chunk)
+    }
+
+    private fun takeCallChunk(textFromCallStart: String): String? {
+        val trimmed = textFromCallStart.trimStart()
+        val prefix =
+            when {
+                trimmed.startsWith("do(") -> "do"
+                trimmed.startsWith("finish(") -> "finish"
+                trimmed.startsWith("interrupt(") -> "interrupt"
+                else -> return null
+            }
+        val openIdx = trimmed.indexOf('(')
+        if (openIdx < 0) return null
+
+        var inQuotes = false
+        var bracketDepth = 0
+        var parenDepth = 0
+        for (i in openIdx until trimmed.length) {
+            val c = trimmed[i]
+            when (c) {
+                '"' -> inQuotes = !inQuotes
+                '[' -> if (!inQuotes) bracketDepth++
+                ']' -> if (!inQuotes) bracketDepth = (bracketDepth - 1).coerceAtLeast(0)
+                '(' -> if (!inQuotes && bracketDepth == 0) parenDepth++
+                ')' -> if (!inQuotes && bracketDepth == 0) {
+                    parenDepth--
+                    if (parenDepth == 0) {
+                        return trimmed.substring(0, i + 1).trim()
+                    }
+                }
+            }
+        }
+        // 没找到闭合括号，尽量返回首行（避免整段自然语言导致 parseArgs 失败）
+        return (prefix + "(" + trimmed.substring(openIdx + 1).lineSequence().firstOrNull().orEmpty()).trim()
+    }
+}
