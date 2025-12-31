@@ -17,6 +17,7 @@ object AutoGlmVirtualScreen {
     private val ensureMutex = Mutex()
 
     @Volatile private var lastEnsureAtMs: Long = 0L
+    @Volatile private var boundChatSessionId: String? = null
 
     fun isReady(): Boolean {
         val binderAlive = runCatching { ShowerBinderRegistry.hasAliveService() }.getOrDefault(false)
@@ -33,7 +34,29 @@ object AutoGlmVirtualScreen {
         onLog: ((String) -> Unit)? = null,
         bitrateKbps: Int = 3000,
     ): Boolean {
+        return ensureCreatedForChatSession(
+            context = context,
+            chatSessionId = "",
+            onLog = onLog,
+            bitrateKbps = bitrateKbps,
+        )
+    }
+
+    /**
+     * 确保虚拟屏幕已创建，并将其“绑定”到某个聊天会话。
+     *
+     * Shower 当前只支持单个 display：当 chatSessionId 变化时，这里会主动重建 display，
+     * 以保证“新对话不会复用旧对话的屏幕画面”。
+     */
+    fun ensureCreatedForChatSession(
+        context: Context,
+        chatSessionId: String,
+        onLog: ((String) -> Unit)? = null,
+        bitrateKbps: Int = 3000,
+    ): Boolean {
         val ctx = context.applicationContext
+        val desired = chatSessionId.trim().takeIf { it.isNotBlank() }
+
         if (!ShizukuScreencap.isReady()) {
             onLog?.invoke("Shizuku 未授权或未运行：无法创建虚拟屏幕")
             return false
@@ -41,17 +64,25 @@ object AutoGlmVirtualScreen {
 
         return runBlocking(Dispatchers.IO) {
             ensureMutex.withLock {
-                if (isReady()) {
+                val ready = isReady()
+                val needRecreate = ready && desired != null && boundChatSessionId != desired
+
+                if (ready && !needRecreate) {
+                    if (desired != null) boundChatSessionId = desired
                     onLog?.invoke("虚拟屏幕已就绪：displayId=${getDisplayId()}")
                     return@withLock true
                 }
 
                 val now = System.currentTimeMillis()
-                if (now - lastEnsureAtMs < ENSURE_DEBOUNCE_MS) {
+                if (!needRecreate && now - lastEnsureAtMs < ENSURE_DEBOUNCE_MS) {
                     onLog?.invoke("虚拟屏幕正在初始化，请稍候…")
                     return@withLock isReady()
                 }
                 lastEnsureAtMs = now
+
+                if (needRecreate) {
+                    onLog?.invoke("检测到对话切换：重建虚拟屏幕（旧=${boundChatSessionId ?: "<none>"} 新=$desired）")
+                }
 
                 val started =
                     runCatching { ShowerServerManager.ensureServerStarted(ctx) }
@@ -89,10 +120,12 @@ object AutoGlmVirtualScreen {
                     Thread.sleep(100)
                 }
 
-                val ready = isReady()
+                val created = isReady()
+                if (created) boundChatSessionId = desired
+
                 val suffix = "displayId=$id, size=${size?.first}x${size?.second}"
-                onLog?.invoke(if (ok && ready) "虚拟屏幕已创建：$suffix" else "虚拟屏幕创建失败：$suffix")
-                ready
+                onLog?.invoke(if (ok && created) "虚拟屏幕已创建：$suffix" else "虚拟屏幕创建失败：$suffix")
+                created
             }
         }
     }

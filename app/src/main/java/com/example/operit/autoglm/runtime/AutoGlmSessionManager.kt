@@ -19,6 +19,7 @@ object AutoGlmSessionManager {
 
     data class Session(
         val id: String,
+        val chatSessionId: String?,
         val task: String,
         val startedAt: Long,
         @Volatile var status: Status,
@@ -30,8 +31,9 @@ object AutoGlmSessionManager {
 
     private val sessions = ConcurrentHashMap<String, Session>()
 
-    fun start(context: Context, task: String, maxSteps: Int = 0): JSONObject {
+    fun start(context: Context, task: String, maxSteps: Int = 0, chatSessionId: String = ""): JSONObject {
         val ctx = context.applicationContext
+        val chatId = chatSessionId.trim().takeIf { it.isNotBlank() }
 
         if (task.isBlank()) {
             return JSONObject().put("ok", false).put("error", "任务为空")
@@ -48,6 +50,19 @@ object AutoGlmSessionManager {
         val id = UUID.randomUUID().toString()
         val sb = StringBuilder(8 * 1024)
 
+        // Shower 目前只支持单 display：避免多个 AutoGLM 任务同时运行互相打架/反复重建虚拟屏幕。
+        runCatching {
+            val now = System.currentTimeMillis()
+            sessions.values
+                .filter { it.status == Status.RUNNING }
+                .forEach { s ->
+                    s.runner.cancel("已启动新的 AutoGLM 任务（当前仅支持单任务运行）")
+                    s.status = Status.CANCELLED
+                    s.endedAt = now
+                    synchronized(s.log) { s.log.appendLine("提示：已启动新的 AutoGLM 任务，本任务被自动取消。") }
+                }
+        }
+
         fun appendLog(line: String) {
             synchronized(sb) {
                 sb.appendLine(line)
@@ -60,14 +75,13 @@ object AutoGlmSessionManager {
 
         // 每次启动任务都确保虚拟屏幕就绪（Shower）；避免重复 ensureDisplay 造成“多虚拟屏幕/画面丢失”
         runCatching {
-            if (!AutoGlmVirtualScreen.isReady()) {
-                val ok = AutoGlmVirtualScreen.ensureCreated(ctx, onLog = ::appendLog)
-                if (!ok) {
-                    appendLog("提示：虚拟屏幕未就绪，后续将回退到真实屏幕截图/无障碍执行")
-                }
-            } else {
-                appendLog("提示：虚拟屏幕已就绪，无需重复创建")
-            }
+            val ok =
+                AutoGlmVirtualScreen.ensureCreatedForChatSession(
+                    context = ctx,
+                    chatSessionId = chatId ?: "",
+                    onLog = ::appendLog,
+                )
+            if (!ok) appendLog("提示：虚拟屏幕未就绪，后续将回退到真实屏幕截图/无障碍执行")
             // 如果用户已授予悬浮窗权限，则自动显示“虚拟屏幕（悬浮窗）”方便查看 AI 当前操作画面
             ShowerVirtualScreenOverlay.show(ctx)
         }.onFailure { e ->
@@ -89,6 +103,7 @@ object AutoGlmSessionManager {
         val session =
             Session(
                 id = id,
+                chatSessionId = chatId,
                 task = task,
                 startedAt = System.currentTimeMillis(),
                 status = Status.RUNNING,
@@ -122,6 +137,7 @@ object AutoGlmSessionManager {
         return JSONObject()
             .put("ok", true)
             .put("session_id", id)
+            .put("chat_session_id", chatId ?: JSONObject.NULL)
             .put("status", session.status.name)
             .put("startedAt", session.startedAt)
             .put("recommended_poll_ms", 1200)
@@ -139,6 +155,7 @@ object AutoGlmSessionManager {
         return JSONObject()
             .put("ok", true)
             .put("session_id", s.id)
+            .put("chat_session_id", s.chatSessionId ?: JSONObject.NULL)
             .put("task", s.task)
             .put("status", s.status.name)
             .put("startedAt", s.startedAt)

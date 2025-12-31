@@ -23,6 +23,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             val title: String,
             val subtitle: String,
             val action: CardAction,
+            val chatSessionId: String? = null,
         ) : Item
     }
 
@@ -40,8 +41,8 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return items.size - 1
     }
 
-    fun addCard(title: String, subtitle: String, action: CardAction): Int {
-        items.add(Item.Card(title = title, subtitle = subtitle, action = action))
+    fun addCard(title: String, subtitle: String, action: CardAction, chatSessionId: String? = null): Int {
+        items.add(Item.Card(title = title, subtitle = subtitle, action = action, chatSessionId = chatSessionId))
         notifyItemInserted(items.size - 1)
         return items.size - 1
     }
@@ -112,16 +113,17 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
             val click = View.OnClickListener { v ->
                 val ctx = v.context
-                performAction(ctx, card.action)
+                performAction(ctx, card)
             }
             itemView.setOnClickListener(click)
             btnPrimary.setOnClickListener(click)
         }
 
-        private fun performAction(context: Context, action: CardAction) {
-            when (action) {
+        private fun performAction(context: Context, card: Item.Card) {
+            when (card.action) {
                 CardAction.OPEN_SHOWER_VIEWER -> {
                     val intent = Intent(context, ShowerViewerActivity::class.java)
+                    card.chatSessionId?.takeIf { it.isNotBlank() }?.let { intent.putExtra(ShowerViewerActivity.EXTRA_CHAT_SESSION_ID, it) }
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
                 }

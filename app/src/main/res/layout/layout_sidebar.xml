@@ -70,12 +70,6 @@
             style="@style/Widget.Pikaso.NavItem"
             android:text="@string/nav_tools"
             app:drawableStartCompat="@drawable/ic_grid"/>
-
-        <TextView
-            android:id="@+id/navScripts"
-            style="@style/Widget.Pikaso.NavItem"
-            android:text="@string/nav_scripts"
-            app:drawableStartCompat="@drawable/ic_code"/>
     </LinearLayout>
 
     <!-- History Section (Flexible) -->

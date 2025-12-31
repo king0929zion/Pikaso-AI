@@ -10,6 +10,7 @@ import com.ai.assistance.showerclient.ShowerBinderRegistry
 import com.ai.assistance.showerclient.ShowerController
 import com.ai.assistance.showerclient.ShowerServerManager
 import com.example.operit.R
+import com.example.operit.autoglm.runtime.AutoGlmVirtualScreen
 import com.example.operit.autoglm.runtime.AutoGlmUiStatus
 import com.example.operit.logging.AppLog
 import com.example.operit.shizuku.ShizukuScreencap
@@ -27,6 +28,7 @@ class ShowerViewerActivity : AppCompatActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private lateinit var btnCreate: MaterialButton
     private val handler = Handler(Looper.getMainLooper())
+    private var chatSessionId: String? = null
 
     private val updateButtonRunnable =
         object : Runnable {
@@ -40,6 +42,8 @@ class ShowerViewerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_shower_viewer)
+
+        chatSessionId = intent?.getStringExtra(EXTRA_CHAT_SESSION_ID)?.trim()?.takeIf { it.isNotBlank() }
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -85,6 +89,32 @@ class ShowerViewerActivity : AppCompatActivity() {
                 if (!ok) {
                     Toast.makeText(this@ShowerViewerActivity, "启动失败，可在聊天里调用 shower_log_read 查看日志", Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+
+        // 若带着 chat_session_id 打开，则切换/重建对应对话的虚拟屏幕，避免新对话复用旧屏幕。
+        chatSessionId?.let { id ->
+            scope.launch(Dispatchers.IO) {
+                AutoGlmVirtualScreen.ensureCreatedForChatSession(
+                    context = applicationContext,
+                    chatSessionId = id,
+                    onLog = null,
+                )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        val id = intent?.getStringExtra(EXTRA_CHAT_SESSION_ID)?.trim()?.takeIf { it.isNotBlank() }
+        if (id != null && id != chatSessionId) {
+            chatSessionId = id
+            scope.launch(Dispatchers.IO) {
+                AutoGlmVirtualScreen.ensureCreatedForChatSession(
+                    context = applicationContext,
+                    chatSessionId = id,
+                    onLog = null,
+                )
             }
         }
     }
@@ -136,5 +166,9 @@ class ShowerViewerActivity : AppCompatActivity() {
                 Toast.makeText(this, "已复制", Toast.LENGTH_SHORT).show()
             }
             .show()
+    }
+
+    companion object {
+        const val EXTRA_CHAT_SESSION_ID = "chat_session_id"
     }
 }

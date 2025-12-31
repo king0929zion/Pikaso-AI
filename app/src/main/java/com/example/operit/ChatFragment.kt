@@ -186,13 +186,15 @@ class ChatFragment : Fragment() {
             val systemPromptBase = PromptPreferences.get(requireContext()).getChatSystemPrompt()
             val systemPrompt =
                 systemPromptBase +
-                    "\n\n你可以在需要时调用工具函数来操作应用内模块（脚本/日志/虚拟屏幕等）。" +
-                    "对明显破坏性操作（如清空日志、覆盖脚本）再向用户确认即可。" +
+                    "\n\n你可以在需要时调用工具函数来操作应用内模块（日志/虚拟屏幕等）。" +
+                    "对明显破坏性操作（如清空日志）再向用户确认即可。" +
                     "\n\n你也可以调用 AutoGLM 工具执行跨应用的手机自动化任务：" +
                     "先调用 autoglm_run(task=...) 获得 session_id；再用 autoglm_status(session_id=...) 轮询进度；" +
                     "需要停止则调用 autoglm_cancel(session_id=...)." +
                     "\n\n重要：当用户已经明确要求执行某个自动化任务时，默认视为已授权一般操作；" +
-                    "不要在每一步反复询问“是否允许”。仅当涉及支付/转账/删除/隐私授权等不可逆或敏感操作时，再进行一次确认。"
+                    "不要在每一步反复询问“是否允许”。仅当涉及支付/转账/删除/隐私授权等不可逆或敏感操作时，再进行一次确认。\n\n" +
+                    "触发 AutoGLM 的规则：当用户提出跨应用的手机操作需求（打开 App、搜索、点击、滑动、下单等）时，直接调用 autoglm_run(task=...)，" +
+                    "把用户意图改写为清晰、可执行的任务描述传入 task，不要先征求许可。"
             conversation.add(OpenAiChatClient.Message(role = "system", content = systemPrompt))
         }
 
@@ -259,13 +261,24 @@ class ChatFragment : Fragment() {
                                 AppLog.i("Chat", "tool_calls=${r.toolCalls.size}")
 
                                 Thread {
+                                    val chatSessionId = sessionId.orEmpty()
                                     val toolMessages = ArrayList<OpenAiChatClient.Message>(r.toolCalls.size)
                                     val summary = StringBuilder()
                                     var shouldAddVirtualScreenCard = false
 
                                     r.toolCalls.forEach { tc ->
+                                        val injectedArgsJson =
+                                            if (tc.name == "autoglm_run" && chatSessionId.isNotBlank()) {
+                                                runCatching {
+                                                    val obj = JSONObject(tc.argumentsJson)
+                                                    obj.put("chat_session_id", chatSessionId)
+                                                    obj.toString()
+                                                }.getOrElse { tc.argumentsJson }
+                                            } else {
+                                                tc.argumentsJson
+                                            }
                                         val toolResult =
-                                            ChatToolRegistry.execute(ctx, tc.name, tc.argumentsJson)
+                                            ChatToolRegistry.execute(ctx, tc.name, injectedArgsJson)
                                                 .getOrElse { e ->
                                                     JSONObject()
                                                         .put("ok", false)
@@ -303,6 +316,7 @@ class ChatFragment : Fragment() {
                                                 title = "虚拟屏幕（AutoGLM）",
                                                 subtitle = "点击查看 AutoGLM 当前正在操作的页面",
                                                 action = ChatAdapter.CardAction.OPEN_SHOWER_VIEWER,
+                                                chatSessionId = chatSessionId,
                                             )
                                         }
 
@@ -342,4 +356,3 @@ class ChatFragment : Fragment() {
         const val ARG_SESSION_ID = "session_id"
     }
 }
-

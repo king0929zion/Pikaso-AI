@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         val navItems = mapOf(
             R.id.navChat to ChatFragment(),
             R.id.navTools to ToolsFragment(),
-            R.id.navScripts to ScriptsFragment()
         )
 
         navItems.forEach { (id, fragment) ->
@@ -122,7 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSidebarActiveState(activeId: Int) {
-        val ids = listOf(R.id.navChat, R.id.navTools, R.id.navScripts)
+        val ids = listOf(R.id.navChat, R.id.navTools)
         ids.forEach { id ->
             val view = findViewById<TextView>(id)
             if (id == activeId) {

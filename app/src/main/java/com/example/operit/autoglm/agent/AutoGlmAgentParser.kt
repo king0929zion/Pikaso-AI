@@ -70,7 +70,8 @@ object AutoGlmAgentParser {
             val c = text[i]
             when (c) {
                 '"' -> {
-                    inQuotes = !inQuotes
+                    val escaped = i > 0 && text[i - 1] == '\\'
+                    if (!escaped) inQuotes = !inQuotes
                     sb.append(c)
                 }
                 '[' -> {
@@ -107,13 +108,28 @@ object AutoGlmAgentParser {
 
     /**
      * 部分模型会忽略 <answer> 标签而直接输出自然语言 + do(...)/finish(...)
-     * 这里做一个兜底：从全文中提取第一个可解析的动作调用。
+     * 这里做一个兜底：从全文中提取“最后一个”可解析的动作调用（避免复述规则时混入示例 do(...)）。
      */
     private fun extractActionCall(text: String): String? {
         val candidates = listOf("do(", "finish(", "interrupt(")
-        val start = candidates.mapNotNull { token -> text.indexOf(token).takeIf { it >= 0 } }.minOrNull() ?: return null
-        val chunk = text.substring(start)
-        return takeCallChunk(chunk)
+
+        val starts = ArrayList<Int>()
+        for (token in candidates) {
+            var idx = text.indexOf(token)
+            while (idx >= 0) {
+                starts.add(idx)
+                idx = text.indexOf(token, idx + token.length)
+            }
+        }
+        if (starts.isEmpty()) return null
+
+        // 优先使用“最后一个”可解析的调用，避免模型在解释/复述规则时把示例 do(...) 混进输出里。
+        for (start in starts.distinct().sortedDescending()) {
+            val chunk = takeCallChunk(text.substring(start)) ?: continue
+            if (parseAction(chunk) != null) return chunk
+        }
+
+        return takeCallChunk(text.substring(starts.maxOrNull() ?: return null))
     }
 
     private fun takeCallChunk(textFromCallStart: String): String? {
@@ -134,7 +150,10 @@ object AutoGlmAgentParser {
         for (i in openIdx until trimmed.length) {
             val c = trimmed[i]
             when (c) {
-                '"' -> inQuotes = !inQuotes
+                '"' -> {
+                    val escaped = i > 0 && trimmed[i - 1] == '\\'
+                    if (!escaped) inQuotes = !inQuotes
+                }
                 '[' -> if (!inQuotes) bracketDepth++
                 ']' -> if (!inQuotes) bracketDepth = (bracketDepth - 1).coerceAtLeast(0)
                 '(' -> if (!inQuotes && bracketDepth == 0) parenDepth++

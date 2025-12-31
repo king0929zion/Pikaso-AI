@@ -7,7 +7,6 @@ import com.ai.assistance.showerclient.ShowerController
 import com.ai.assistance.showerclient.ShowerEnvironment
 import com.example.operit.autoglm.runtime.AutoGlmSessionManager
 import com.example.operit.logging.AppLog
-import com.example.operit.scripts.ScriptStore
 import com.example.operit.shizuku.ShizukuScreencap
 import com.example.operit.virtualdisplay.VirtualDisplayManager
 import com.example.operit.virtualdisplay.shower.ShowerVirtualScreenOverlay
@@ -20,51 +19,6 @@ import org.json.JSONObject
 object ChatToolRegistry {
     fun defaultTools(): List<com.example.operit.ai.OpenAiChatClient.ToolDefinition> {
         return listOf(
-            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
-                name = "scripts_list",
-                description = "列出本地脚本库中的脚本（id/name/desc/updatedAt/sizeBytes）。",
-                parameters = JSONObject().put("type", "object").put("properties", JSONObject()).put("additionalProperties", false),
-            ),
-            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
-                name = "scripts_read",
-                description = "读取脚本内容。",
-                parameters =
-                    JSONObject()
-                        .put("type", "object")
-                        .put("properties", JSONObject().put("id", JSONObject().put("type", "string").put("description", "脚本 id")))
-                        .put("required", JSONArray().put("id"))
-                        .put("additionalProperties", false),
-            ),
-            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
-                name = "scripts_write",
-                description = "写入脚本内容（会覆盖原内容）。",
-                parameters =
-                    JSONObject()
-                        .put("type", "object")
-                        .put(
-                            "properties",
-                            JSONObject()
-                                .put("id", JSONObject().put("type", "string").put("description", "脚本 id"))
-                                .put("content", JSONObject().put("type", "string").put("description", "脚本内容")),
-                        )
-                        .put("required", JSONArray().put("id").put("content"))
-                        .put("additionalProperties", false),
-            ),
-            com.example.operit.ai.OpenAiChatClient.ToolDefinition(
-                name = "scripts_create",
-                description = "新建脚本（可选指定 name/desc/content）。",
-                parameters =
-                    JSONObject()
-                        .put("type", "object")
-                        .put(
-                            "properties",
-                            JSONObject()
-                                .put("name", JSONObject().put("type", "string").put("description", "脚本名称（可选）"))
-                                .put("desc", JSONObject().put("type", "string").put("description", "脚本描述（可选）"))
-                                .put("content", JSONObject().put("type", "string").put("description", "脚本内容（可选）")),
-                        )
-                        .put("additionalProperties", false),
-            ),
             com.example.operit.ai.OpenAiChatClient.ToolDefinition(
                 name = "logs_read",
                 description = "读取应用日志（可指定最大字符数，默认 8000）。",
@@ -131,6 +85,12 @@ object ChatToolRegistry {
                         .put(
                             "properties",
                             JSONObject()
+                                .put(
+                                    "chat_session_id",
+                                    JSONObject()
+                                        .put("type", "string")
+                                        .put("description", "当前聊天会话 id（内部注入；用于隔离虚拟屏幕，不需要用户填写）"),
+                                )
                                 .put("task", JSONObject().put("type", "string").put("description", "要执行的手机自动化任务"))
                                 .put(
                                     "max_steps",
@@ -177,10 +137,6 @@ object ChatToolRegistry {
         return runCatching {
             val result =
                 when (name) {
-                    "scripts_list" -> scriptsList(context)
-                    "scripts_read" -> scriptsRead(context, args.getString("id"))
-                    "scripts_write" -> scriptsWrite(context, args.getString("id"), args.getString("content"))
-                    "scripts_create" -> scriptsCreate(context, args)
                     "logs_read" -> logsRead(args.optInt("max_chars", 8000))
                     "logs_clear" -> logsClear()
                     "virtual_screen_create" -> virtualScreenCreate(context)
@@ -190,7 +146,13 @@ object ChatToolRegistry {
                     "shower_overlay_hide" -> showerOverlayHide()
                     "shower_status" -> showerStatus(context)
                     "shower_log_read" -> showerLogRead(args.optInt("max_chars", 8000))
-                    "autoglm_run" -> AutoGlmSessionManager.start(context, args.optString("task", ""), args.optInt("max_steps", 0))
+                    "autoglm_run" ->
+                        AutoGlmSessionManager.start(
+                            context = context,
+                            task = args.optString("task", ""),
+                            maxSteps = args.optInt("max_steps", 0),
+                            chatSessionId = args.optString("chat_session_id", ""),
+                        )
                     "autoglm_status" ->
                         AutoGlmSessionManager.status(
                             sessionId = args.optString("session_id", ""),
@@ -201,90 +163,6 @@ object ChatToolRegistry {
                 }
             result.toString()
         }
-    }
-
-    private fun scriptsList(context: Context): JSONObject {
-        val store = ScriptStore.get(context)
-        val list = store.list()
-        val arr =
-            JSONArray().apply {
-                list.forEach { meta ->
-                    put(
-                        JSONObject()
-                            .put("id", meta.id)
-                            .put("name", meta.name)
-                            .put("desc", meta.desc)
-                            .put("updatedAt", meta.updatedAt)
-                            .put("sizeBytes", store.contentSizeBytes(meta.id)),
-                    )
-                }
-            }
-        return JSONObject().put("ok", true).put("items", arr).put("count", list.size)
-    }
-
-    private fun scriptsRead(context: Context, id: String): JSONObject {
-        val store = ScriptStore.get(context)
-        val meta = store.getMeta(id)
-        val content = store.readContent(id)
-        return JSONObject()
-            .put("ok", true)
-            .put(
-                "meta",
-                JSONObject()
-                    .put("id", id)
-                    .put("name", meta?.name ?: "")
-                    .put("desc", meta?.desc ?: "")
-                    .put("updatedAt", meta?.updatedAt ?: 0L)
-                    .put("sizeBytes", store.contentSizeBytes(id)),
-            )
-            .put("content", content)
-    }
-
-    private fun scriptsWrite(context: Context, id: String, content: String): JSONObject {
-        val store = ScriptStore.get(context)
-        val now = System.currentTimeMillis()
-        val old = store.getMeta(id)
-        val meta =
-            ScriptStore.ScriptMeta(
-                id = id,
-                name = old?.name ?: "script_$id.js",
-                desc = old?.desc ?: "",
-                updatedAt = now,
-            )
-        store.saveMeta(meta)
-        store.writeContent(id, content)
-        AppLog.i("Tool:scripts_write", "updated script id=$id size=${content.toByteArray(Charsets.UTF_8).size}")
-        return JSONObject().put("ok", true).put("id", id).put("updatedAt", now).put("sizeBytes", store.contentSizeBytes(id))
-    }
-
-    private fun scriptsCreate(context: Context, args: JSONObject): JSONObject {
-        val store = ScriptStore.get(context)
-        val meta = store.createNew()
-
-        val name = args.optString("name").takeIf { it.isNotBlank() }
-        val desc = args.optString("desc").takeIf { it.isNotBlank() }
-        val content = args.optString("content").takeIf { it.isNotBlank() }
-
-        val now = System.currentTimeMillis()
-        val updatedMeta =
-            ScriptStore.ScriptMeta(
-                id = meta.id,
-                name = name ?: meta.name,
-                desc = desc ?: meta.desc,
-                updatedAt = now,
-            )
-        store.saveMeta(updatedMeta)
-        if (content != null) {
-            store.writeContent(meta.id, content)
-        }
-        AppLog.i("Tool:scripts_create", "created script id=${meta.id}")
-        return JSONObject()
-            .put("ok", true)
-            .put("id", meta.id)
-            .put("name", updatedMeta.name)
-            .put("desc", updatedMeta.desc)
-            .put("updatedAt", updatedMeta.updatedAt)
-            .put("sizeBytes", store.contentSizeBytes(meta.id))
     }
 
     private fun logsRead(maxChars: Int): JSONObject {

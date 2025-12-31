@@ -277,7 +277,7 @@ class AutoGlmActionExecutor(
 
     /**
      * 支持两种坐标写法：
-     * - [x,y]，x/y 为 0~999（或 0~1000）整数
+     * - [x,y]，x/y 为 0~999（或 0~1000）整数（千分位相对坐标）
      * - [0.5,0.7]，x/y 为 0~1 小数（比例）
      *
      * 返回归一化后的坐标(0~1)
@@ -292,9 +292,9 @@ class AutoGlmActionExecutor(
         val isRatio = x in 0.0..1.0 && y in 0.0..1.0
         if (isRatio) return x to y
 
-        val denom = 999.0
-        val nx = (x.coerceIn(0.0, 1000.0).coerceAtMost(999.0)) / denom
-        val ny = (y.coerceIn(0.0, 1000.0).coerceAtMost(999.0)) / denom
+        val denom = 1000.0
+        val nx = x.coerceIn(0.0, 1000.0) / denom
+        val ny = y.coerceIn(0.0, 1000.0) / denom
         return nx to ny
     }
 
