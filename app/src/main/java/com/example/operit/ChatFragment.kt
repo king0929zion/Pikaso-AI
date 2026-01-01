@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.operit.ai.AiPreferences
 import com.example.operit.ai.AiSettings
 import com.example.operit.ai.OpenAiChatClient
+import com.example.operit.autoglm.runtime.AutoGlmSessionManager
 import com.example.operit.chat.ChatStore
 import com.example.operit.logging.AppLog
 import com.example.operit.prompts.PromptPreferences
@@ -33,6 +34,7 @@ class ChatFragment : Fragment() {
     private var inFlightCall: Call? = null
     private var isSending = false
     private var currentPlaceholderPos: Int? = null
+    @Volatile private var runningAutoGlmSessionId: String? = null
 
     private val chatClient = OpenAiChatClient()
     private val conversation = mutableListOf<OpenAiChatClient.Message>()
@@ -95,6 +97,10 @@ class ChatFragment : Fragment() {
         if (isSending) {
             inFlightCall?.cancel()
             isSending = false
+            runningAutoGlmSessionId?.let { sid ->
+                runCatching { AutoGlmSessionManager.cancel(sid) }
+                runningAutoGlmSessionId = null
+            }
             currentPlaceholderPos?.let { adapter.updateMessage(it, "已取消") }
             Toast.makeText(ctx, "已取消", Toast.LENGTH_SHORT).show()
             updateSendingUi()
@@ -277,14 +283,28 @@ class ChatFragment : Fragment() {
                                             } else {
                                                 tc.argumentsJson
                                             }
+
+                                        // autoglm_run：阻塞等待直到 AutoGLM 完成（SUCCESS/FAILED/CANCELLED），再把最终结果回传给主对话模型。
                                         val toolResult =
-                                            ChatToolRegistry.execute(ctx, tc.name, injectedArgsJson)
-                                                .getOrElse { e ->
-                                                    JSONObject()
-                                                        .put("ok", false)
-                                                        .put("error", e.message ?: e.javaClass.simpleName)
-                                                        .toString()
+                                            if (tc.name == "autoglm_run") {
+                                                activity?.runOnUiThread {
+                                                    adapter.updateMessage(
+                                                        placeholderPos,
+                                                        "AutoGLM 执行中…（完成后会自动返回结果；可点右侧停止取消）",
+                                                    )
                                                 }
+                                                executeAutoGlmRunAndWait(ctx, injectedArgsJson).also {
+                                                    runningAutoGlmSessionId = null
+                                                }
+                                            } else {
+                                                ChatToolRegistry.execute(ctx, tc.name, injectedArgsJson)
+                                                    .getOrElse { e ->
+                                                        JSONObject()
+                                                            .put("ok", false)
+                                                            .put("error", e.message ?: e.javaClass.simpleName)
+                                                            .toString()
+                                                    }
+                                            }
 
                                         toolMessages.add(
                                             OpenAiChatClient.Message(
@@ -354,5 +374,79 @@ class ChatFragment : Fragment() {
 
     companion object {
         const val ARG_SESSION_ID = "session_id"
+    }
+
+    private fun executeAutoGlmRunAndWait(context: android.content.Context, argsJson: String): String {
+        val startRaw =
+            ChatToolRegistry.execute(context, "autoglm_run", argsJson)
+                .getOrElse { e ->
+                    return JSONObject().put("ok", false).put("error", e.message ?: e.javaClass.simpleName).toString()
+                }
+
+        val startObj = runCatching { JSONObject(startRaw) }.getOrNull() ?: return startRaw
+        val ok = startObj.optBoolean("ok", false)
+        if (!ok) return startObj.toString()
+
+        val sid = startObj.optString("session_id").trim()
+        if (sid.isBlank()) return startObj.put("ok", false).put("error", "autoglm_run 未返回 session_id").toString()
+
+        runningAutoGlmSessionId = sid
+
+        val pollMs = startObj.optInt("recommended_poll_ms", 1200).coerceIn(400, 3000)
+        val maxWaitMs = 30L * 60L * 1000L // 30 分钟兜底，避免无限等待
+        val startedAt = System.currentTimeMillis()
+
+        var lastStatus: JSONObject? = null
+        while (true) {
+            val now = System.currentTimeMillis()
+            if (now - startedAt > maxWaitMs) {
+                return JSONObject()
+                    .put("ok", true)
+                    .put("note", "等待 AutoGLM 超时（${maxWaitMs / 60000} 分钟），请稍后在虚拟屏幕查看或再次询问。")
+                    .put("start", startObj)
+                    .put("last_status", lastStatus ?: JSONObject.NULL)
+                    .toString()
+            }
+
+            // 若用户在 UI 点了“停止”，onSendClicked 会触发 autoglm_cancel 并清空 runningAutoGlmSessionId
+            if (runningAutoGlmSessionId == null) {
+                return JSONObject()
+                    .put("ok", true)
+                    .put("note", "用户已取消 AutoGLM")
+                    .put("start", startObj)
+                    .put("last_status", lastStatus ?: JSONObject.NULL)
+                    .toString()
+            }
+
+            val statusObj =
+                runCatching { AutoGlmSessionManager.status(sessionId = sid, maxChars = 12000) }
+                    .getOrElse { e -> JSONObject().put("ok", false).put("error", e.message ?: e.javaClass.simpleName) }
+            lastStatus = statusObj
+
+            val status = statusObj.optString("status").trim()
+            if (status.isNotBlank() && status != "RUNNING") {
+                val log = statusObj.optString("log")
+                val finalMessage = extractAutoGlmFinalMessage(log)
+                return JSONObject()
+                    .put("ok", true)
+                    .put("start", startObj)
+                    .put("final_status", statusObj)
+                    .put("final_message", finalMessage)
+                    .toString()
+            }
+
+            Thread.sleep(pollMs.toLong())
+        }
+    }
+
+    private fun extractAutoGlmFinalMessage(log: String): String {
+        if (log.isBlank()) return ""
+        val lines = log.lineSequence().map { it.trim() }.filter { it.isNotBlank() }.toList()
+        val keys = listOf("完成：", "中断：", "失败：", "已取消：")
+        for (i in lines.size - 1 downTo 0) {
+            val line = lines[i]
+            if (keys.any { line.startsWith(it) }) return line
+        }
+        return lines.lastOrNull().orEmpty()
     }
 }
