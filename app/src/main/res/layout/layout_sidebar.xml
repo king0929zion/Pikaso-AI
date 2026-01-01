@@ -93,6 +93,7 @@
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:paddingBottom="8dp"
+        android:foreground="@drawable/fg_fade_top_bottom_surface_variant"
         app:layout_constraintTop_toBottomOf="@id/tvHistoryTitle"
         app:layout_constraintBottom_toTopOf="@id/userSection"
         app:layout_constraintStart_toStartOf="parent"

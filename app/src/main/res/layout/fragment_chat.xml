@@ -13,6 +13,7 @@
         android:paddingTop="@dimen/spacing_small"
         android:paddingBottom="@dimen/spacing_small"
         android:clipToPadding="false"
+        android:foreground="@drawable/fg_fade_top_bottom_background"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/inputAreaContainer"
         app:layout_constraintStart_toStartOf="parent"
