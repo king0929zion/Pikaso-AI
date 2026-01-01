@@ -18,6 +18,9 @@ object MarkdownRenderer {
 
     fun render(textView: TextView, markdown: String) {
         textView.movementMethod = LinkMovementMethod.getInstance()
+        textView.linksClickable = true
+        textView.highlightColor = Color.TRANSPARENT
+        textView.setLinkTextColor(MaterialColors.getColor(textView, com.google.android.material.R.attr.colorPrimary))
         val markwon = get(textView.context.applicationContext)
         markwon.setMarkdown(textView, markdown)
     }
