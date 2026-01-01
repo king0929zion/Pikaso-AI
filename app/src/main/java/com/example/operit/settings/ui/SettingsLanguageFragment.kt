@@ -1,10 +1,11 @@
-package com.example.operit
+package com.example.operit.settings.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.operit.R
 import com.example.operit.settings.LanguagePreferences
 
 class SettingsLanguageFragment : Fragment() {

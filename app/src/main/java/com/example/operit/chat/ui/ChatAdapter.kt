@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.chat.ui
 
 import android.content.Context
 import android.content.Intent
@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.R
 import com.example.operit.markdown.MarkdownRenderer
 import com.example.operit.virtualdisplay.shower.ShowerViewerActivity
 import com.google.android.material.button.MaterialButton

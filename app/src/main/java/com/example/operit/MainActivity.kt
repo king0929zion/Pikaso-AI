@@ -12,6 +12,12 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.color.MaterialColors
 import com.example.operit.ai.AiPreferences
 import com.example.operit.chat.ChatStore
+import com.example.operit.chat.history.HistoryAdapter
+import com.example.operit.chat.ui.ChatFragment
+import com.example.operit.profile.ui.ProfileFragment
+import com.example.operit.settings.ui.SettingsAiFragment
+import com.example.operit.settings.ui.SettingsFragment
+import com.example.operit.tools.ui.ToolsFragment
 
 class MainActivity : AppCompatActivity() {
 

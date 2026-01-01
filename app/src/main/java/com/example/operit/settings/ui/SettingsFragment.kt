@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.settings.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.R
+import com.example.operit.logging.ui.LogsFragment
 
 class SettingsFragment : Fragment() {
 

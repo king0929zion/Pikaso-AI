@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.autoglm.ui
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -11,11 +11,13 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.operit.R
 import com.example.operit.accessibility.AccessibilityStatus
 import com.example.operit.ai.AiPreferences
 import com.example.operit.autoglm.AutoGlmOneClickFragment
 import com.example.operit.autoglm.runtime.AutoGlmAgentRunner
 import com.example.operit.logging.AppLog
+import com.example.operit.settings.ui.SettingsPermissionsFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import java.text.SimpleDateFormat

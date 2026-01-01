@@ -11,8 +11,8 @@ android {
         applicationId "com.example.operit"
         minSdk 24
         targetSdk 34
-        versionCode 77
-        versionName "1.2.74"
+        versionCode 78
+        versionName "1.2.75"
     }
 
     signingConfigs {

@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.chat.ui
 
 import android.os.Bundle
 import android.view.KeyEvent
@@ -11,6 +11,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.MainActivity
+import com.example.operit.R
 import com.example.operit.ai.AiPreferences
 import com.example.operit.ai.AiSettings
 import com.example.operit.ai.OpenAiChatClient
@@ -19,6 +21,7 @@ import com.example.operit.chat.ChatStore
 import com.example.operit.logging.AppLog
 import com.example.operit.prompts.PromptPreferences
 import com.example.operit.toolsystem.ChatToolRegistry
+import com.example.operit.tools.ui.ToolsFragment
 import com.google.android.material.button.MaterialButton
 import okhttp3.Call
 import org.json.JSONObject

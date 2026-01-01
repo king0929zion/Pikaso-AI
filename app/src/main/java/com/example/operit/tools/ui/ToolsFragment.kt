@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.tools.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.R
 import com.example.operit.autoglm.AutoGlmOneClickFragment
 import com.example.operit.autoglm.AutoGlmConnectionTestFragment
 import com.example.operit.tools.ProcessLimitFragment

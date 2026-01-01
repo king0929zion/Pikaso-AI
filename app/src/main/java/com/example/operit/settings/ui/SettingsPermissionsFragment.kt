@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.settings.ui
 
 import android.Manifest
 import android.content.Context
@@ -17,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.operit.R
 import com.example.operit.accessibility.AccessibilityStatus
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial

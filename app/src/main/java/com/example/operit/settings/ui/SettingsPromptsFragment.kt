@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.settings.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.operit.R
 import com.example.operit.prompts.PromptPreferences
 
 class SettingsPromptsFragment : Fragment() {

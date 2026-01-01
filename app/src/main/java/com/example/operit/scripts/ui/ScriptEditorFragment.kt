@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.scripts.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.operit.R
 import com.example.operit.scripts.ScriptStore
 
 class ScriptEditorFragment : Fragment() {

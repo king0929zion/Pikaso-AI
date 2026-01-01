@@ -11,7 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.operit.R
-import com.example.operit.SettingsPermissionsFragment
+import com.example.operit.settings.ui.SettingsAiFragment
+import com.example.operit.settings.ui.SettingsPermissionsFragment
 import com.example.operit.accessibility.AccessibilityStatus
 import com.example.operit.ai.AiPreferences
 import com.example.operit.autoglm.agent.AutoGlmAgentParser
@@ -78,7 +79,7 @@ class AutoGlmConnectionTestFragment : Fragment() {
             if (settings.endpoint.isBlank() || settings.model.isBlank() || settings.apiKey.isBlank()) {
                 Toast.makeText(ctx, "请先在设置里完成 AutoGLM（UI 控制模型）配置", Toast.LENGTH_SHORT).show()
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, com.example.operit.SettingsAiFragment())
+                    .replace(R.id.fragmentContainer, SettingsAiFragment())
                     .addToBackStack(null)
                     .commit()
                 return@setOnClickListener

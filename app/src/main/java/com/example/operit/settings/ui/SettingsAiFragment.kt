@@ -1,4 +1,4 @@
-package com.example.operit
+package com.example.operit.settings.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.operit.MainActivity
+import com.example.operit.R
 import com.example.operit.ai.AiPreferences
 import com.example.operit.ai.AiProvider
 import com.example.operit.ai.AiSettings

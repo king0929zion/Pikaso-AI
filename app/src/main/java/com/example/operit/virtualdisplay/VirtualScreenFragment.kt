@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment
 import com.ai.assistance.showerclient.ShowerBinderRegistry
 import com.ai.assistance.showerclient.ShowerController
 import com.example.operit.R
-import com.example.operit.SettingsPermissionsFragment
+import com.example.operit.settings.ui.SettingsPermissionsFragment
 import com.example.operit.shizuku.ShizukuScreencap
 import com.example.operit.virtualdisplay.shower.ShowerVirtualScreenOverlay
 import com.google.android.material.appbar.MaterialToolbar

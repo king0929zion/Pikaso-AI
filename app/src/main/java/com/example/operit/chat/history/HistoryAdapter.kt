@@ -1,10 +1,11 @@
-package com.example.operit
+package com.example.operit.chat.history
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.operit.R
 import com.example.operit.chat.ChatStore
 
 class HistoryAdapter(
